@@ -457,9 +457,9 @@ html, body, .iphone, .screen, #sec-assignment, .brand-grad {
 
     const btnBegin=document.getElementById('btnBegin');btnBegin.addEventListener('click',()=>{secShift.classList.add('hidden');secAssign.classList.remove('hidden');populateAssignments()});
 
-    const assignments=[{id:'CCL-4821',window:'08–09 AM',from:'BBT → Yusen Logistics (Torrance)',loadin:'YTI',container:'TCLU2948209',appt:'Empty',bk:'RICFGP034400',instruction:'Chassis back to Compton yard'}];
+    const assignments=[{id:'CCL-5001',from:'Long Beach Port',loadin:'Yusen Logistics (Torrance)',container:'TCLU2948209',appt:'Empty',bk:'RICFGP034400',instruction:'Chassis back to Compton yard'}];
     const assignmentSelect=document.getElementById('assignmentSelect');const fields={from:document.getElementById('f_from'),loadin:document.getElementById('f_loadin'),container:document.getElementById('f_container'),appt:document.getElementById('f_appt'),bk:document.getElementById('f_bk'),window:document.getElementById('f_window'),instruction:document.getElementById('f_instruction')};
-    function populateAssignments(){assignmentSelect.innerHTML=assignments.map((a,i)=>`<option value="${i}">Job #${a.id} • ${a.window}</option>`).join('');setAssignment(0)}
+    function populateAssignments(){assignmentSelect.innerHTML=assignments.map((a,i)=>`<option value="${i}">Job # ${a.id}</option>`).join('');setAssignment(0)}
     function setAssignment(i){const a=assignments[i];fields.from.textContent=a.from;fields.loadin.textContent=a.loadin;fields.container.textContent=a.container;fields.appt.textContent=a.appt;fields.bk.textContent=a.bk;fields.window.textContent=a.window;fields.instruction.textContent=a.instruction}
     assignmentSelect.addEventListener('change',e=>setAssignment(e.target.value));
   </script>
@@ -1887,7 +1887,7 @@ html { overflow-anchor: none !important; }
 <script>
 (function(){
   const ORIGIN_ADDR = "Long Beach Port, 415 W Ocean Blvd, Long Beach, CA 90802";
-  const DEST_ADDR   = "2350 E Dominguez St, Carson, CA 90810"; // Yusen Logistics
+  const DEST_ADDR   = "19001 Harborgate Way, Torrance, CA 90501"; // Yusen Logistics
 
   function setDemoVerbiage(){
     const fromEl = document.getElementById('f_from');
