@@ -1,0 +1,1989 @@
+<!doctype html>
+<html lang="en">
+<style>
+/* Phase 3: Centered hamburger modal */
+#menuSheet.menu-overlay { position: fixed !important; inset: 0 !important; z-index: 10000 !important; display: none; }
+#menuSheet.menu-overlay.show { display: block !important; }
+#menuSheet .menu-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.55); }
+#menuSheet .menu-card      { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width: 18rem; background:#0f172a; border:1px solid #334155; border-radius:16px; overflow:hidden;
+  box-shadow:0 25px 60px rgba(0,0,0,.4); color:#e5e7eb; }
+#menuSheet .menu-item { width:100%; text-align:left; padding:12px 16px; background:transparent; border:0; color:#e5e7eb; }
+#menuSheet .menu-item:hover { background:#0b1220; }
+#menuSheet .menu-hr { border:0; border-top:1px solid #334155; margin:0; }
+
+/* Safety: header/button must accept clicks */
+#sec-assignment .assign-header, #sec-assignment #menuBtn { pointer-events: auto !important; }
+
+/* Phase 3: Hamburger popover placement & style */
+#menuSheet { position:absolute; top:3rem; left:0.5rem; z-index:9999; width:14rem; }
+#menuSheet > .menu-card { background:#0f172a; border:1px solid #334155; border-radius:14px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+#menuSheet[hidden], #menuSheet.hidden { display:none !important; }
+
+/* PHASE 3 TWEAKS (scoped) */
+#sec-assignment { padding-top: 10px !important; }                         /* Pull section up (hamburger closer to top-left) */
+#sec-assignment #assignHeader { margin-top: 20px !important; }            /* Drop driver name slightly */
+#sec-assignment .card { margin-top: 8px !important; }                     /* Bring middle section up (less gap under title) */
+#assignActions { margin-top: 12px !important; }                           /* Bring buttons up (closer to card) */
+
+/* PHASE 3: Lower only the title line */
+#sec-assignment #assignHeader { margin-top: 14px !important; line-height: 1.1 !important; }
+#sec-assignment .assign-sub { margin-top: 4px !important; }
+
+/* Phase 3 title tweak: drop slightly and compress */
+/* Safety: make sure hidden class fully hides menu sheet */
+.hidden { display: none !important; }
+.assign-header { position: relative; }
+
+
+#menuBtn { position:absolute !important; top:6px !important; left:6px !important; z-index:100000 !important; pointer-events:auto !important; }
+
+
+
+/* Ensure the top status bar doesn't swallow clicks over the menu button */
+#menuBtn { position:absolute; top:6px; left:8px; z-index:9999; pointer-events:auto; }
+
+/* Guards for menu button placement/clickability */
+.assign-header, .status-bar, .phone-frame { position: relative; }
+#menuBtn { position:absolute !important; top:2px !important; left:4px !important; z-index:100000 !important; pointer-events:auto !important; }
+</style>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Coastal City Logistics — Driver App</title>
+  <script src="https://cdn.tailwindcss.com">// === BK# input confirmation (minimal, non-invasive) ===
+(function(){
+  const bkInput = document.getElementById('f_bk_input');
+  const modal = document.getElementById('bkModal');
+  const valEl = document.getElementById('bkConfirmValue');
+  const btnConfirm = document.getElementById('bkConfirm');
+  const btnEdit = document.getElementById('bkEdit');
+  if(!bkInput) return;
+  function openModal(val){ valEl.textContent = val || '—'; modal.style.display='flex'; }
+  function closeModal(){ modal.style.display='none'; }
+  bkInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter'&&bkInput.value.trim().length){ e.preventDefault(); openModal(bkInput.value.trim()); }});
+  bkInput.addEventListener('blur',()=>{ const v=bkInput.value.trim(); if(v){ openModal(v);} });
+  btnEdit&&btnEdit.addEventListener('click',()=>{ closeModal(); bkInput.focus(); bkInput.select(); });
+  btnConfirm&&btnConfirm.addEventListener('click',()=>{ closeModal(); try{ const t=document.createElement('div'); t.textContent='Seal # saved'; t.className='fixed bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-xl shadow'; document.body.appendChild(t); setTimeout(()=>t.remove(),1200);}catch(e){} });
+})();
+// === End BK# confirmation ===
+
+// === Hide employee badge on Phase 3 (Assignment) ===
+(function(){
+  const badge = document.querySelector('.id-badge');
+  const secAssign = document.getElementById('sec-assignment');
+  if(!badge || !secAssign) return;
+  function syncBadge(){
+    const assignVisible = !secAssign.classList.contains('hidden');
+    // hide entirely on Phase 3
+    if(assignVisible){ badge.style.display = 'none'; }
+    else { aTitle.textContent='Confirm Arrived?'; aText.textContent=''; }
+  }
+  // initial
+  syncBadge();
+  // observe section visibility changes
+  const obs = new MutationObserver(syncBadge);
+  obs.observe(secAssign, {attributes:true, attributeFilter:['class']});
+  // also re-sync on page interactions
+  document.addEventListener('click', ()=> setTimeout(syncBadge, 0), true);
+})();
+// === End hide badge ===
+
+
+// === Phase 3 confirmations + demo fill ===
+window.addEventListener('DOMContentLoaded', function(){
+  // Prefill (demo only)
+  const sel = document.getElementById('assignmentSelect');
+  if(sel && !sel.options.length){
+    sel.innerHTML = '<option>Job #CCL-4821 • 08–09 AM</option>';
+  }
+  const setText = (id, v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  setText('f_from', 'BBT → Yusen Logistics\n(Torrance)');
+  setText('f_loadin', 'YTI');
+  setText('f_container', 'TCLU2948209');
+  setText('f_appt', );
+  setText('f_window', '08–09 AM');
+  const instr = document.getElementById('f_instruction'); if(instr) instr.textContent='Chassis back to Compton yard';
+  const bk = document.getElementById('f_bk_input'); if(bk && !bk.value) bk.value='RICFGP034400';
+
+  // Modal plumbing
+  const modal = document.getElementById('actionModal');
+  const title = document.getElementById('actionTitle');
+  const text = document.getElementById('actionText');
+  const btnCancel = document.getElementById('actionCancel');
+  const btnConfirm = document.getElementById('actionConfirm');
+  const btnEnRoute = document.getElementById('btnEnRoute');
+  const btnArrived = document.getElementById('btnArrived');
+
+  function openModal(kind){
+    const map = { enroute: ['Confirm En Route','Mark this assignment as En Route?'],
+                  arrived: ['Confirm Arrived','Mark this assignment as Arrived?'] };
+    title.textContent = map[kind][0];
+    text.textContent  = map[kind][1];
+    btnConfirm.dataset.kind = kind;
+    modal.style.display='flex';
+  }
+  function closeModal(){ modal.style.display='none'; }
+  function toast(msg){
+    const t=document.createElement('div');
+    t.textContent=msg;
+    t.className='fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-xl border border-slate-600 shadow';
+    document.body.appendChild(t); setTimeout(()=>t.remove(),1500);
+  }
+
+  if(btnEnRoute) btnEnRoute.addEventListener('click', (e)=>{ e.preventDefault(); openModal('enroute'); });
+  if(btnArrived) btnArrived.addEventListener('click', (e)=>{ e.preventDefault(); openModal('arrived'); });
+  if(btnCancel) btnCancel.addEventListener('click', closeModal);
+  if(btnConfirm) btnConfirm.addEventListener('click', ()=>{
+    const kind = btnConfirm.dataset.kind || 'enroute';
+    closeModal();
+    toast(kind==='enroute' ? 'Status set: En Route' : 'Status set: Arrived');
+  });
+});
+// === End confirmations + demo fill ===
+
+</script>
+  <style>
+    .iphone{width:380px;height:780px;border-radius:46px;background:#0b1220;padding:12px;box-shadow:0 18px 60px rgba(2,6,23,.45);border:6px solid #000}
+    .screen{border-radius:38px;overflow:hidden;background:#0a0f1a;height:100%;display:flex;flex-direction:column}
+    .brand-grad{background:linear-gradient(120deg,#1e3a8a 0%, #0f766e 100%)}
+    .card{border:1px solid #1e293b;border-radius:20px;background:#111827;box-shadow:0 10px 30px rgba(0,0,0,.4);color:#f9fafb}
+    .cta{display:flex;align-items:center;justify-content:center;gap:.4rem; border-radius:12px; padding:12px 18px; font-weight:600; font-size:16px; letter-spacing:.3px; color:#fff; transition:all .2s ease}
+    .cta-blue{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%); box-shadow:0 6px 16px rgba(37,99,235,.4)}
+    .cta-blue:hover{transform:translateY(-1px); box-shadow:0 10px 20px rgba(37,99,235,.55)}
+    .cta-green{background:linear-gradient(135deg,#059669 0%,#047857 100%); box-shadow:0 6px 16px rgba(5,150,105,.4)}
+    .cta-green:hover{transform:translateY(-1px); box-shadow:0 10px 20px rgba(5,150,105,.55)}
+    .fade-enter{opacity:0; transform:translateY(6px);}
+    .fade-enter-active{opacity:1; transform:translateY(0); transition:opacity .25s ease, transform .25s ease;}
+
+    /* Phase 2 styling */
+    .panel{position:relative;border-radius:24px;padding:2px;background:linear-gradient(135deg,#3b82f6 0%,#06b6d4 50%,#10b981 100%);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+    .panel .inner{border-radius:22px;background:#0f172a;padding:32px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative}
+    .id-badge{position:fixed;top:26px;right:46px;background:#0b1220;color:#f8fafc;font-weight:700;font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid #334155;box-shadow:0 6px 18px rgba(0,0,0,.35);z-index:50}
+    .driver-label{font-size:13px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#e2e8f0;margin-top:20px}
+    .driver-name{font-size:20px;font-weight:700;color:#fff;letter-spacing:.3px;margin-top:0px};line-height:1.1
+
+    /* Assignment header (Phase 3 fix) */
+    .assign-header{position:relative;margin-bottom:20px;text-align:center;padding-top:40px}
+    .assign-id{position:absolute;top:0;right:0;background:#1e293b;color:#f1f5f9;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid #334155}
+    .assign-name{font-size:20px;font-weight:700;color:#fff;letter-spacing:.2px;margin:0 auto;text-align:center;display:block}
+    .assign-sub{color:#94a3b8;margin-top:6px;text-align:center;width:100%}
+  
+  /* --- Error Modal (Phase 1) --- */
+  .modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,.7);backdrop-filter:saturate(120%) blur(2px);display:none;z-index:50}
+  .modal{width:92%;max-width:560px;margin:0 auto;background:#0b1322;border:1px solid #14223a;color:#e5e7eb;
+         border-radius:28px;box-shadow:0 30px 80px rgba(0,0,0,.55);padding:28px}
+  .modal-title{font-weight:800;font-size:22px;letter-spacing:.5px;margin-bottom:10px}
+  .modal-body{font-size:18px;line-height:1.4;color:#cbd5e1}
+  .modal-actions{margin-top:22px;display:flex;justify-content:flex-start}
+  .btn-ok{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);border:none;border-radius:14px;
+          padding:12px 22px;font-weight:700;font-size:18px;color:#fff;cursor:pointer;
+          box-shadow:0 10px 22px rgba(37,99,235,.45)}
+  .modal-overlay.show{display:flex;align-items:center;justify-content:center}
+
+.assign-header h2{margin-bottom:2px;line-height:1.1}
+.assign-sub{margin-top:0;font-size:14px}
+#sec-auth.hidden .id-badge{display:none!important}#sec-auth:not(.hidden) .id-badge{display:inline-flex!important}</style>
+
+<style id="chatgpt-menu-v7" data-origin="chatgpt">
+#menuSheet{position:fixed!important;inset:0!important;z-index:100000!important;display:none}
+#menuSheet.show{display:block!important}
+
+#menuSheet .menu-backdrop{position:absolute!important;inset:0!important;background:rgba(2,6,23,.85)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#menuSheet .menu-card{position:fixed!important;transform:translate(-50%,-50%)!important;width:76%!important;max-width:300px!important;background:#0b1220ff!important;border-radius:18px!important;color:#e5e7eb!important;overflow:hidden!important;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 2px rgba(147,197,253,.9)!important}
+#menuSheet .menu-list{padding:4px 0}
+#menuSheet .menu-item{width:100%;padding:12px 14px;border:0;background:transparent;color:#e5e7eb;font-size:16px;font-weight:700;text-align:center;cursor:pointer;-webkit-tap-highlight-color: transparent;}
+#menuSheet .menu-item:hover{background:rgba(30,58,138,.55)}
+#menuSheet .menu-hr{border:0;border-top:1px solid rgba(147,197,253,.7);margin:0}
+
+/* Hard-kill any left drawers/panels while menu is open */
+
+</style>
+
+
+<style id="chatgpt-kill-sidepanel" data-origin="chatgpt">
+.drawer, .sidebar, .side-panel, .offcanvas,
+#drawer, #sidePanel, #slidePanel, #slideMenu,
+*[data-drawer], *[data-offcanvas],
+*[aria-controls*="drawer"], *[aria-controls*="sidepanel"], *[aria-controls*="sidebar"] {
+  display:none !important; visibility:hidden !important; pointer-events:none !important;
+  width:0 !important; max-width:0 !important; transform:none !important; opacity:0 !important;
+}
+</style>
+
+
+<style id="chatgpt-leftpanel-nuke-css" data-origin="chatgpt">
+/* Utility attribute to hide any found left-side panel */
+[data-ghost-hidden="1"] { display:none !important; visibility:hidden !important; pointer-events:none !important; width:0 !important; max-width:0 !important; opacity:0 !important; }
+</style>
+
+
+<style id="phase3-hamburger-patch">
+/* === Phase 3 — Hamburger size & responsiveness patch (scoped) === */
+#menuBtn {
+  min-width: 48px !important;
+  min-height: 48px !important;
+  padding: 10px !important;
+  border-radius: 14px !important;
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: manipulation !important;
+}
+#menuBtn:active { transform: scale(0.98); }
+#menuBtn:focus, #menuBtn:focus-visible { outline: none !important; box-shadow: none !important; }
+
+/* Slightly thicker lines for better visibility */
+#menuBtn span { height: 3px !important; border-radius: 999px !important; }
+
+/* Remove any iOS/Safari tap highlight + accidental text selection that looks like a left panel highlight */
+html, body, .iphone, .screen, #sec-assignment, .brand-grad {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* If any left side panel exists, prevent highlight/focus effects */
+.drawer, .sidebar, .side-panel, .offcanvas,
+#drawer, #sidePanel, #slidePanel, #slideMenu {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Ensure backdrop doesn't visually "select" the left side when tapped */
+#menuSheet .menu-backdrop { -webkit-user-select: none !important; user-select: none !important; }
+</style>
+
+
+<style id="phase3-hamburger-patch-v2">
+/* === Patch v2: ONLY Phase 3 hamburger size, title centering, and no-left highlight === */
+#menuBtn {
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 6px !important;
+  border-radius: 12px !important;
+}
+#menuBtn span { height: 2.5px !important; width: 22px !important; display:block !important; margin: 4px 0 !important; }
+
+/* Kill any left-side highlight (focus/active/tap/select) */
+.sidebar, .side-panel, .drawer, #sidebar, #sidePanel, #drawer, #slidePanel, #slideMenu {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  outline: none !important;
+}
+.sidebar:active, .side-panel:active, .drawer:active,
+#sidebar:active, #sidePanel:active, #drawer:active, #slidePanel:active, #slideMenu:active {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+/* When menu is open, suppress accidental focus outlines anywhere */
+
+::selection { background: transparent; color: inherit; }
+::-moz-selection { background: transparent; color: inherit; }
+
+/* Center the brand title at the top */
+.brand-grad, #brandBar { text-align: center !important; }
+.brand-grad h1, .brand-grad .brand-title, #brandBar h1, #brandBar .brand-title {
+  margin: 0 auto !important;
+  display: block !important;
+  text-align: center !important;
+  width: 100% !important;
+  justify-content: center !important;
+}
+</style>
+
+</head>
+<body class="min-h-screen bg-slate-900 p-6 relative text-slate-100">
+  <main class="max-w-5xl mx-auto flex justify-center">
+    <div class="iphone relative">
+      <div class="screen">
+        <div class="brand-grad text-white flex items-center justify-between px-4 py-3">
+          <div class="text-sm font-semibold">Coastal City Logistics</div>
+        </div>
+
+        <!-- AUTH PAGE -->
+        <section id="sec-auth" class="flex-1 flex flex-col justify-center items-center p-6 space-y-6 bg-slate-900">
+          <div class="text-center">
+            <h1 class="text-3xl font-extrabold text-white mb-1">Sign In</h1>
+            <p class="text-slate-400">Enter Employee ID and PIN</p>
+          </div>
+          <div class="card p-5 w-full max-w-sm">
+            <input id="empId" type="text" placeholder="Employee ID" autocomplete="off" autocapitalize="off" spellcheck="false"
+                   class="w-full rounded-2xl border border-slate-700 bg-slate-800/90 text-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500/60 mb-4" />
+
+            <label class="flex items-center gap-2 text-xs text-slate-400 mb-4 select-none">
+              <input id="rememberId" type="checkbox" class="appearance-none w-4 h-4 rounded border border-slate-600 checked:bg-blue-600 checked:border-blue-600"/>
+              Remember my ID on this device
+            </label>
+
+            <div class="relative mb-6">
+              <input id="pin" type="password" maxlength="4" placeholder="PIN" autocomplete="off" inputmode="numeric"
+                     class="w-full rounded-2xl border border-slate-700 bg-slate-800/90 text-slate-100 px-4 py-3 pr-10 outline-none focus:ring-2 focus:ring-blue-500/60" />
+              <button type="button" id="togglePin" class="absolute inset-y-0 right-3 flex items-center" aria-label="Toggle PIN">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="w-6 h-6 text-slate-300">
+                  <path d="M2 12c2.3-4 6-6.5 10-6.5s7.7 2.5 10 6.5c-2.3 4-6 6.5-10 6.5S4.3 16 2 12z" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="12" r="3.2"/>
+                </svg>
+              </button>
+            </div>
+
+            <button id="btnVerify" type="button" class="w-full cta cta-blue">Verify</button>
+          </div>
+        
+          
+</section>
+
+        <!-- SHIFT PAGE -->
+        <section id="sec-shift" class="hidden flex-1 flex flex-col justify-center items-center p-6 space-y-6 bg-slate-900">
+          <div class="text-center">
+            <h2 class="text-3xl font-extrabold text-white">Welcome</h2>
+            <p class="text-slate-400">Begin your shift</p>
+          </div>
+
+          <div class="panel w-full max-w-sm">
+            <div class="inner">
+              <div class="id-badge" id="lblEmpId">53939</div>
+              <div class="driver-label">Driver</div>
+              <div id="lblEmpName" class="driver-name">Prime Tech Solutions</div>
+              <button id="btnBegin" type="button" class="w-full cta cta-blue">Begin Shift</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ASSIGNMENT PAGE -->
+        <section id="sec-assignment" class="hidden flex-1 p-6 space-y-6 bg-slate-900">
+          <div class="assign-header relative">
+            <button id="menuBtn" class="absolute top-3 left-3 z-20 p-2 rounded-xl border border-slate-700 bg-slate-800/80 backdrop-blur text-slate-100 shadow-lg active:scale-[0.98]"
+                    aria-label="Open menu" style="position:absolute; top:6px; left:6px; z-index:1000000; pointer-events:auto;">
+              <span class="block w-6 h-[3px] bg-slate-200 mb-1 rounded-full"></span>
+              <span class="block w-6 h-[3px] bg-slate-200 mb-1 rounded-full"></span>
+              <span class="block w-6 h-[3px] bg-slate-200 rounded-full"></span>
+            </button>
+            <h2 class="assign-name" id="assignHeader">Prime Tech Solutions</h2>
+            <p class="assign-sub">Your Assignments</p>
+          </div>
+          <div class="card p-5 space-y-4">
+<select id="assignmentSelect" class="w-full rounded-lg border border-slate-600 bg-slate-800 text-slate-100 px-3 py-2 text-sm"></select>
+            <div class="grid grid-cols-2 gap-3 text-sm mt-1">
+  <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm">
+    <div class="text-xs text-slate-400 mb-1">From</div>
+    <div class="font-semibold" id="f_from">—</div>
+  </div>
+  <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm">
+    <div class="text-xs text-slate-400 mb-1">To</div>
+    <div class="font-semibold" id="f_loadin">—</div>
+  </div>
+  <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm">
+    <div class="text-xs text-slate-400 mb-1">Container #</div>
+    <div class="font-semibold" id="f_container">—</div>
+  </div>
+  <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm">
+    <div class="text-xs text-slate-400 mb-1">LOAD / EMPTY</div>
+    <div class="font-semibold" id="f_appt">—</div>
+  </div>
+  <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm">
+    <div class="text-xs text-slate-400 mb-1">BK # / PIN</div>
+    <div class="font-semibold" id="f_seal">—</div>
+  </div>
+  <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm">
+    <div class="text-xs text-slate-400 mb-1">Import / Export</div>
+    <div class="font-semibold" id="f_import_export">—</div>
+  </div>
+
+  <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm"><div class="text-xs text-slate-400 mb-1">Seal #</div><input id="f_bk_input" type="text" inputmode="numeric" pattern="\d*" class="bk-input w-full font-semibold bg-transparent text-slate-100 focus:outline-none focus:ring-0" placeholder="Enter Seal #"/></div>
+  <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm">
+    <div class="text-xs text-slate-400 mb-1">Window</div>
+    <div class="font-semibold" id="f_window">—</div>
+  </div>
+</div>
+            <div class="bg-slate-800 rounded-xl p-4 border border-slate-700 text-sm"><div class="text-xs text-slate-400 mb-1">Instruction</div><div class="font-semibold" id="f_instruction">—</div></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4" id="assignActions">
+            <button class="cta cta-blue" id="btnEnRoute">En Route</button>
+            <button class="cta cta-green" id="btnArrived">Arrived</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  
+<!-- Error Modal -->
+<div id="errOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="errTitle">
+  <div class="modal">
+    <div id="errTitle" class="modal-title">ERROR</div>
+    <div id="errMsg" class="modal-body">Incorrect ID or PIN. 4 attempts remaining before lock.</div>
+    <div class="modal-actions">
+      <button id="errOk" class="btn-ok" type="button">OK</button>
+    </div>
+  </div>
+</div>
+
+  <input id="photoInput" type="file" accept="image/*" capture="environment" class="hidden" />
+</main>
+
+  <script>
+    
+/* === SAFEGUARD: Multi-user extension (non-invasive) === */const CORRECT_ID='53939';const CORRECT_PIN='9999';const EMPLOYEE_NAMES={ '53939':'Prime Tech Solutions','54545':'CCL CEO Jorge','70257':'Tanya' };const ALLOWED_IDS=['53939','54545','70257'];const PIN_MAP={'53939':'9999','54545':'0000','70257':'1989'};/* === End safeguard block === */
+
+    const secAuth=document.getElementById('sec-auth');const secShift=document.getElementById('sec-shift');const secAssign=document.getElementById('sec-assignment');
+    const empIdInput=document.getElementById('empId');const rememberId=document.getElementById('rememberId');const pinField=document.getElementById('pin');const togglePin=document.getElementById('togglePin');const btnVerify=document.getElementById('btnVerify');
+    const lblEmpId=document.getElementById('lblEmpId');const lblEmpName=document.getElementById('lblEmpName');const assignHeader=document.getElementById('assignHeader');const assignEmpId=document.getElementById('assignEmpId');
+    togglePin.addEventListener('click',()=>{pinField.type=pinField.type==='password'?'text':'password'});
+
+    const storedId=localStorage.getItem('ccl_emp_id');if(storedId){empIdInput.value=storedId;rememberId.checked=true}
+    sessionStorage.removeItem('attemptsUsed');sessionStorage.removeItem('locked');
+
+    
+  /* --- Error Modal helpers --- */
+  function openError(message){
+    document.getElementById('errTitle').textContent = 'ERROR';
+    document.getElementById('errMsg').textContent = message;
+    document.getElementById('errOverlay').classList.add('show');
+  }
+  function closeError(){
+    document.getElementById('errOverlay').classList.remove('show');
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    const okBtn = document.getElementById('errOk');
+    const ovl = document.getElementById('errOverlay');
+    okBtn.addEventListener('click', closeError);
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && ovl.classList.contains('show')) closeError(); });
+  });
+
+  const MAX_ATTEMPTS=5;let attemptsUsed=0;let locked=false;
+    function setLocked(){locked=true;sessionStorage.setItem('locked','1');openError('LOCKED — Call Dispatch.');empIdInput.disabled=true;pinField.disabled=true;btnVerify.disabled=true}
+
+    function handleVerify(){if(locked)return;const id=empIdInput.value.trim();const pin=pinField.value.trim();const ok=((id===CORRECT_ID&&pin===CORRECT_PIN)||(ALLOWED_IDS.includes(id)&&pin===PIN_MAP[id]));/* SAFEGUARD */if(!ok){attemptsUsed+=1;const remaining=Math.max(0,MAX_ATTEMPTS-attemptsUsed);if(remaining<=0){setLocked();return}openError(`Incorrect ID or PIN. ${remaining} attempt${remaining===1?'':'s'} remaining before lock.`);return}if(rememberId.checked){localStorage.setItem('ccl_emp_id',id)}else{localStorage.removeItem('ccl_emp_id')}const empName=EMPLOYEE_NAMES[id]||'Employee';lblEmpId.textContent=id;lblEmpName.textContent=empName;assignHeader.textContent=empName;if(assignEmpId)assignEmpId.textContent=id;secAuth.classList.add('hidden');secShift.classList.remove('hidden')}
+
+    btnVerify.addEventListener('click',e=>{e.preventDefault();handleVerify()});pinField.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();handleVerify()}});empIdInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();handleVerify()}});
+
+    const btnBegin=document.getElementById('btnBegin');btnBegin.addEventListener('click',()=>{secShift.classList.add('hidden');secAssign.classList.remove('hidden');populateAssignments()});
+
+    const assignments=[{id:'CCL-4821',window:'08–09 AM',from:'BBT → Yusen Logistics (Torrance)',loadin:'YTI',container:'TCLU2948209',appt:'Empty',bk:'RICFGP034400',instruction:'Chassis back to Compton yard'}];
+    const assignmentSelect=document.getElementById('assignmentSelect');const fields={from:document.getElementById('f_from'),loadin:document.getElementById('f_loadin'),container:document.getElementById('f_container'),appt:document.getElementById('f_appt'),bk:document.getElementById('f_bk'),window:document.getElementById('f_window'),instruction:document.getElementById('f_instruction')};
+    function populateAssignments(){assignmentSelect.innerHTML=assignments.map((a,i)=>`<option value="${i}">Job #${a.id} • ${a.window}</option>`).join('');setAssignment(0)}
+    function setAssignment(i){const a=assignments[i];fields.from.textContent=a.from;fields.loadin.textContent=a.loadin;fields.container.textContent=a.container;fields.appt.textContent=a.appt;fields.bk.textContent=a.bk;fields.window.textContent=a.window;fields.instruction.textContent=a.instruction}
+    assignmentSelect.addEventListener('change',e=>setAssignment(e.target.value));
+  </script>
+<!-- BK Confirm Modal --><div id="bkModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50"><div style="background:#0f172a;border:1px solid #334155;border-radius:16px;padding:20px;width:85%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.35);color:#fff;"><h3 class="text-white text-lg font-semibold mb-1">Confirm Seal #</h3><p class="text-slate-300 text-sm mb-4">Please confirm this BK number is correct:</p><div class="text-white font-bold text-xl mb-5" id="bkConfirmValue">—</div><div class="flex gap-3"><button id="bkEdit" class="flex-1 py-2 rounded-xl bg-slate-700 text-white">Edit</button><button id="bkConfirm" class="flex-1 py-2 rounded-xl bg-blue-600 text-white">Confirm</button></div></div></div>
+<!-- Action Confirm Modal -->
+<div id="actionModal" style="position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;">
+  <div class="bg-slate-900 rounded-2xl p-5 w-[85%] max-w-sm border border-slate-700 shadow-xl">
+    <h3 class="text-white text-lg font-semibold mb-1" id="actionTitle">Confirm</h3>
+    <p class="text-slate-300 text-sm mb-5" id="actionText">Are you sure?</p>
+    <div class="flex gap-3">
+      <button id="actionCancel" class="flex-1 py-2 rounded-xl bg-slate-700 text-white">Cancel</button>
+      <button id="actionConfirm" class="flex-1 py-2 rounded-xl bg-blue-600 text-white">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === Robust confirmations for En Route / Arrived + BK# ===
+(function(){
+  function byId(id){ return document.getElementById(id); }
+  function makeModal(id, title, text){
+    let m = byId(id);
+    if(m) return m;
+    m = document.createElement('div');
+    m.id = id;
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;';
+    m.innerHTML = '<div style="background:#0f172a;border:1px solid #334155;border-radius:16px;padding:20px;width:85%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.35);color:#fff;">'
+                  + '<h3 style="font-size:18px;font-weight:700;margin:0 0 6px 0" id="'+id+'__title">'+title+'</h3>'
+                  + '<p style="color:#cbd5e1;font-size:14px;margin:0 0 16px 0" id="'+id+'__text">'+text+'</p>'
+                  + '<div style="display:flex;gap:12px">'
+                  + '<button id="'+id+'__cancel" style="flex:1;padding:10px 0;border-radius:12px;background:#475569;color:#fff;border:none">Cancel</button>'
+                  + '<button id="'+id+'__ok" style="flex:1;padding:10px 0;border-radius:12px;background:#2563eb;color:#fff;border:none">Confirm</button>'
+                  + '</div></div>';
+    document.body.appendChild(m);
+    return m;
+  }
+  function showModal(m){ m.style.display = 'flex'; }
+  function hideModal(m){ m.style.display = 'none'; }
+  function toast(msg){
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:#0f172a;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:9999;';
+    document.body.appendChild(t); setTimeout(()=>t.remove(),1500);
+  }
+
+  // Action modal (En Route / Arrived)
+  const actionModal = makeModal('actionModal2', 'Confirm', 'Are you sure?');
+  const aTitle = byId('actionModal2__title');
+  const aText  = byId('actionModal2__text');
+  const aCancel= byId('actionModal2__cancel');
+  const aOK    = byId('actionModal2__ok');
+
+  function openAction(kind){
+    if(kind==='enroute'){ aTitle.textContent='Confirm En Route?'; aText.textContent=''; }
+    else { aTitle.textContent='Confirm Arrived?'; aText.textContent=''; }
+    aOK.dataset.kind = kind;
+    showModal(actionModal);
+  }
+  aCancel.addEventListener('click', ()=> hideModal(actionModal));
+  aOK.addEventListener('click', ()=>{ 
+    const kind = aOK.dataset.kind; hideModal(actionModal);
+    toast(kind==='enroute' ? 'Status set: En Route' : 'Status set: Arrived');
+  });
+
+  const btnEn = byId('btnEnRoute'), btnArr = byId('btnArrived');
+  if(btnEn)  btnEn.addEventListener('click', (e)=>{ e.preventDefault(); openAction('enroute'); });
+  if(btnArr) btnArr.addEventListener('click', (e)=>{ e.preventDefault(); openAction('arrived'); });
+
+  // BK confirm modal
+  const bkModal = makeModal('bkConfirmModal', 'Confirm Seal #', 'Please confirm the BK number is correct.');
+  const bkText  = byId('bkConfirmModal__text');
+  const bkCancel= byId('bkConfirmModal__cancel');
+  const bkOK    = byId('bkConfirmModal__ok');
+  const bkInput = byId('f_bk_input');
+
+  function openBk(){
+    const val = (bkInput && bkInput.value || '').trim();
+    bkText.textContent = 'Confirm Seal #: ' + (val || '—');
+    showModal(bkModal);
+  }
+  if(bkInput){
+    bkInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && bkInput.value.trim()){ e.preventDefault(); openBk(); } });
+    bkInput.addEventListener('blur', ()=>{ if(bkInput.value.trim()){ openBk(); } });
+  }
+  bkCancel.addEventListener('click', ()=> hideModal(bkModal));
+  bkOK.addEventListener('click', ()=>{ hideModal(bkModal); toast('Seal # saved'); });
+})();
+// === End robust confirmations ===
+</script>
+<script>
+(function(){
+  function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  var windows = ['07–08 AM','08–09 AM','09–10 AM','10–11 AM','1–2 PM','2–3 PM'];
+  var instructions = ['Use Gate 3','Bring paperwork to office','Call dispatch on arrival','Drop chassis at yard','Check seals before exit','Wait for dock assignment'];
+  function setByLabel(labelText, val){
+    var labels = Array.from(document.querySelectorAll('#sec-assignment .text-xs.text-slate-400'));
+    var label = labels.find(el => (el.textContent||'').trim().toLowerCase() === labelText.toLowerCase());
+    if(!label) return;
+    var valueEl = label.nextElementSibling;
+    if(!valueEl) return;
+    var current = (valueEl.textContent||'').trim();
+    if(current === '—' || current === '') valueEl.textContent = val;
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    setByLabel('Window', rand(windows));
+    setByLabel('Instruction', rand(instructions));
+  });
+})();
+</script>
+
+
+<script>
+
+// === Minimal, non-invasive Driver Menu logic (Phase 3) ===
+(function(){
+  var secAuth   = document.getElementById('sec-auth');
+  var secShift  = document.getElementById('sec-shift');
+  var secAssign = document.getElementById('sec-assignment');
+  var menuBtn   = document.getElementById('menuBtn');
+  var menuSheet = document.getElementById('menuSheet');
+  var photoInput= document.getElementById('photoInput');
+  var assignmentSelect = document.getElementById('assignmentSelect');
+  var pinField  = document.getElementById('pin');
+  var empIdInput= document.getElementById('empId');
+
+  function toast(msg){
+    var t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:#0f172a;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:9999;font:14px system-ui, -apple-system, Segoe UI, Roboto;';
+    document.body.appendChild(t);
+    setTimeout(function(){ if(t && t.parentNode){ t.parentNode.removeChild(t);} }, 1500);
+  }
+
+  function getJobId(){
+    if(!assignmentSelect) return '';
+    var opt = assignmentSelect.options[assignmentSelect.selectedIndex];
+    if(!opt) return '';
+    var m = /Job #([^\s•]+)/.exec(opt.textContent || '');
+    return m ? m[1] : '';
+  }
+
+  function ensureMenuSheet(){
+    if (menuSheet) return menuSheet;
+    var host = document.querySelector('#sec-assignment') || document.body;
+    var overlay = document.createElement('div');
+    overlay.id = 'menuSheet';
+    overlay.className = 'menu-overlay hidden';
+    overlay.setAttribute('aria-hidden','true');
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'menu-backdrop';
+    overlay.appendChild(backdrop);
+
+    var card = document.createElement('div');
+    card.id = 'menuModal';
+    card.className = 'menu-card';
+    overlay.appendChild(card);
+
+    function makeBtn(label, act){
+      var b = document.createElement('button');
+      b.className = 'menu-item';
+      b.setAttribute('data-act', act);
+      b.textContent = label;
+      return b;
+    }
+    function makeHr(){
+      var hr = document.createElement('hr');
+      hr.className = 'menu-hr';
+      return hr;
+    }
+
+    card.appendChild(makeBtn('Home','home'));
+    card.appendChild(makeHr());
+    card.appendChild(makeBtn('Complete','complete'));
+    card.appendChild(makeBtn('Take Photo','photo'));
+    card.appendChild(makeBtn('Yard Move','yard'));
+    card.appendChild(makeBtn('Break Down','breakdown'));
+
+    host.appendChild(overlay);
+    menuSheet = overlay;
+    return menuSheet;
+  }
+
+  function toggleMenu(show){
+    if(!menuSheet) menuSheet = ensureMenuSheet();
+    var isOpen = menuSheet.classList.contains('show');
+    var shouldOpen = (show === undefined) ? !isOpen : !!show;
+    if (shouldOpen){
+      menuSheet.classList.add('show');
+      menuSheet.classList.remove('hidden');
+      menuSheet.removeAttribute('hidden');
+      menuSheet.setAttribute('aria-hidden','false');
+    } else {
+      menuSheet.classList.remove('show');
+      menuSheet.classList.add('hidden');
+      menuSheet.setAttribute('hidden','hidden');
+      menuSheet.setAttribute('aria-hidden','true');
+    }
+  }
+
+  function signOut(){
+    if(secAuth && secShift && secAssign){
+      secAssign.classList.add('hidden');
+      secShift.classList.add('hidden');
+      secAuth.classList.remove('hidden');
+      if(pinField) pinField.value='';
+      if(empIdInput && !localStorage.getItem('ccl_emp_id')) empIdInput.value='';
+      toast('Signed out');
+    }
+  }
+
+  function confirmAction(title, text, onConfirm){
+    var m = document.createElement('div');
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:10001;';
+    m.innerHTML = '<div style="background:#0f172a;border:1px solid #334155;border-radius:16px;padding:20px;width:85%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.35);color:#fff;">'
+      + '<h3 style="font-size:18px;font-weight:700;margin:0 0 6px 0">'+title+'</h3>'
+      + '<p style="color:#cbd5e1;font-size:14px;margin:0 0 16px 0">'+text+'</p>'
+      + '<div style="display:flex;gap:12px">'
+      +   '<button id="cm_cancel" style="flex:1;padding:10px 0;border-radius:12px;background:#475569;color:#fff;border:none">Cancel</button>'
+      +   '<button id="cm_ok" style="flex:1;padding:10px 0;border-radius:12px;background:#2563eb;color:#fff;border:none">Confirm</button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(m);
+    var cancel = m.querySelector('#cm_cancel');
+    var ok = m.querySelector('#cm_ok');
+    cancel.addEventListener('click', function(){ document.body.removeChild(m); });
+    ok.addEventListener('click', function(){ document.body.removeChild(m); try{ onConfirm && onConfirm(); }catch(e){} });
+  }
+
+  function handleComplete(){
+    var jobId = getJobId();
+    confirmAction('Confirm Complete?', 'Notify dispatch and mark job '+(jobId?('#'+jobId+' '):'')+'as Completed.', function(){
+      if (window.__updateJobCompleted) {
+        window.__updateJobCompleted(jobId).then(function(){
+          toast('Job marked COMPLETE; dispatcher notified');
+        }).catch(function(err){
+          console.warn('Update failed', err);
+          toast('Complete sent, update failed');
+        }).finally(function(){ toggleMenu(false); });
+      } else {
+        toast('Job marked COMPLETE; dispatcher notified');
+        toggleMenu(false);
+      }
+    });
+  }
+
+  function handlePhoto(){
+    var jobId = getJobId() || 'unknown';
+    if(!photoInput) return;
+    photoInput.onchange = function(){
+      if(!photoInput.files || !photoInput.files[0]) return;
+      var f = photoInput.files[0];
+      if (window.__uploadJobPhoto) {
+        window.__uploadJobPhoto(jobId, f).then(function(url){
+          toast('Photo uploaded for Job #'+jobId);
+        }).catch(function(err){
+          console.warn('Photo upload failed', err);
+          toast('Photo attach failed');
+        }).finally(function(){ toggleMenu(false); photoInput.value = ''; });
+      } else {
+        try { localStorage.setItem('photo_for_'+jobId, f.name); } catch(e) {}
+        toast('Photo attached to Job #'+jobId);
+        toggleMenu(false); photoInput.value = '';
+      }
+    };
+    photoInput.click();
+  }
+
+  function handleYardMove(){
+    var jobId = getJobId();
+    if (window.__updateJobStatus) {
+      window.__updateJobStatus(jobId, 'Yard Move', 'yardMoveAt')
+      .then(function(){ toast('Status set: YARD MOVE'); })
+      .catch(function(e){ console.warn(e); toast('Yard Move update failed'); })
+      .finally(function(){ toggleMenu(false); });
+    } else {
+      toast('Status set: YARD MOVE');
+      toggleMenu(false);
+    }
+  }
+
+  function handleBreakDown(){
+    var jobId = getJobId();
+    confirmAction('Confirm Break Down?', 'Driver status will change to BREAK DOWN. Next step: CALL DISPATCH.', function(){
+      if (window.__updateJobStatus) {
+        window.__updateJobStatus(jobId, 'Break Down', 'breakDownAt')
+        .then(function(){ toast('Status set: BREAK DOWN — Call Dispatch'); })
+        .catch(function(e){ console.warn(e); toast('Break Down update failed'); })
+        .finally(function(){ toggleMenu(false); });
+      } else {
+        toast('Status set: BREAK DOWN — Call Dispatch');
+        toggleMenu(false);
+      }
+    });
+  }
+
+  if (menuBtn){
+    menuBtn.addEventListener('click', function(e){
+      e.preventDefault(); e.stopPropagation();
+      ensureMenuSheet();
+      toggleMenu(true);
+    });
+  }
+
+  document.addEventListener('click', function(e){
+    if(!menuSheet) return;
+    var isOpen = menuSheet.classList.contains('show');
+    if (!isOpen) return;
+    var modal = document.getElementById('menuModal');
+    if ((modal && modal.contains(e.target)) || (menuBtn && menuBtn.contains(e.target))) return;
+    toggleMenu(false);
+  }, true);
+})();
+// === End Driver Menu ===
+</script>
+
+
+<script>
+// Extra safety: bind hamburger click after DOM ready as well
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    var menuBtn = document.getElementById('menuBtn');
+    if (!menuBtn) return;
+    if (!window.__hamburgerBound){
+      window.__hamburgerBound = true;
+      menuBtn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        ensureMenuSheet();
+        toggleMenu(true);
+      });
+    }
+  }catch(e){}
+});
+</script>
+
+<script>
+document.addEventListener('keydown', function(ev){
+  if(ev.key === 'Escape'){
+    var overlay = document.getElementById('menuSheet');
+    if(overlay && overlay.classList.contains('show')){
+      overlay.classList.remove('show'); overlay.classList.add('hidden'); overlay.setAttribute('hidden','hidden');
+    }
+  }
+});
+</script>
+
+<script id="chatgpt-menu-v7" data-origin="chatgpt">
+(function(){
+  if (window.__menuV7) return; window.__menuV7 = true;
+
+  function ensureMenu(){
+    var sheet = document.getElementById('menuSheet');
+    if (!sheet){
+      sheet = document.createElement('div');
+      sheet.id = 'menuSheet';
+      sheet.innerHTML = '<div class="menu-backdrop"></div><div id="menuModal" class="menu-card"><div class="menu-list"></div></div>';
+      document.body.appendChild(sheet);
+    }
+    var list = sheet.querySelector('.menu-list');
+    if (!list.dataset.built){
+      list.dataset.built = '1';
+
+      function add(label, action){
+        var b = document.createElement('button'); 
+        b.type='button'; 
+        b.className='menu-item'; 
+        b.textContent=label; 
+        b.dataset.action=action;
+        return b;
+      }
+      function hr(){ var h=document.createElement('hr'); h.className='menu-hr'; return h; }
+
+      list.appendChild(add('Home','home'));
+      list.appendChild(hr());
+      list.appendChild(add('Complete','complete'));
+      list.appendChild(add('Take Photo','photo'));
+      list.appendChild(add('Yard Move','yard'));
+      list.appendChild(add('Break Down','breakdown'));
+
+      function activate(action){
+        if(action==='home') return handleHome();
+        if(action==='complete') return handleComplete();
+        if(action==='photo') return handlePhoto();
+        if(action==='yard') return handleYardMove();
+        if(action==='breakdown') return handleBreakdown();
+      }
+
+      // Delegate clicks INSIDE overlay only
+      sheet.addEventListener('click', function(e){
+        var item = e.target.closest && e.target.closest('.menu-item');
+        if (!item) return;
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        e.preventDefault(); e.stopPropagation();
+        activate(item.dataset.action);
+      }, true);
+
+      // Also handle touchend (for mobiles that suppress click)
+      sheet.addEventListener('touchend', function(e){
+        var item = e.target.closest && e.target.closest('.menu-item');
+        if (!item) return;
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        e.preventDefault(); e.stopPropagation();
+        activate(item.dataset.action);
+      }, {passive:false});
+
+      // Prevent accidental background highlighting
+      var bd = sheet.querySelector('.menu-backdrop');
+      bd.addEventListener('mousedown', function(e){ e.preventDefault(); }, true);
+      bd.addEventListener('touchstart', function(e){ e.preventDefault(); }, {passive:false});
+    }
+    return sheet;
+  }
+
+  function rectOfPhone(){
+    var sec = document.getElementById('sec-assignment');
+    if (sec){ return sec.getBoundingClientRect(); }
+    return { left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0, };
+  }
+
+  function centerToPhone(){
+    var card = document.getElementById('menuModal');
+    var r = rectOfPhone();
+    var cx = (r.width ? (r.left + r.width/2) : r.left);
+    var cy = (r.height ? (r.top + r.height/2) : r.top);
+    if (!card) return;
+    card.style.left = Math.round(cx) + 'px';
+    card.style.top  = Math.round(cy) + 'px';
+  }
+
+  function openMenu(){
+    ensureMenu();
+    collapseLeftPanels();
+    document.documentElement.classList.add('menu-open');
+    document.body.classList.add('menu-open');
+    var sheet = document.getElementById('menuSheet');
+    sheet.classList.add('show');
+    sheet.removeAttribute('hidden');
+    sheet.setAttribute('aria-hidden','false');
+    try { if (document.activeElement) document.activeElement.blur(); } catch(e){}
+    centerToPhone();
+  }
+  function closeMenu(){
+    var sheet = document.getElementById('menuSheet'); if(!sheet) return;
+    sheet.classList.remove('show');
+    sheet.setAttribute('hidden','hidden');
+    sheet.setAttribute('aria-hidden','true');
+    document.documentElement.classList.remove('menu-open');
+    document.body.classList.remove('menu-open');
+  }
+
+  function toast(msg){
+    try{
+      var t=document.createElement('div'); t.textContent=msg;
+      t.style.cssText='position:fixed;left:50%;transform:translate(-50%,0);bottom:18px;background:#0b1220;color:#dbeafe;border:1px solid #23324a;border-radius:12px;padding:8px 14px;z-index:100001;box-shadow:0 10px 30px rgba(0,0,0,.35);font:14px system-ui,-apple-system,Segoe UI,Roboto';
+      document.body.appendChild(t); setTimeout(function(){t.remove();},1600);
+    }catch(e){}
+  }
+
+  function getJobId(){
+    try{
+      var sel=document.getElementById('assignmentSelect');
+      var opt=sel && sel.options[sel.selectedIndex];
+      var m=opt && /Job #([^\s•]+)/.exec(opt.textContent||'');
+      return (m && m[1]) || '';
+    }catch(e){return '';}
+  }
+
+  function confirmBox(title, text, onOK){
+    var m=document.createElement('div');
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:100002;backdrop-filter:blur(4px)';
+    m.innerHTML='<div style="background:#0f172aff;border:1px solid #334155;border-radius:16px;padding:16px;width:min(92vw,420px);box-shadow:0 24px 60px rgba(0,0,0,.4);color:#e5e7eb">'+
+      '<h3 style="font-size:18px;font-weight:800;margin:0 0 8px 0">'+title+'</h3>'+
+      '<p style="color:#cbd5e1;font-size:14px;margin:0 0 16px 0">'+text+'</p>'+
+      '<div style="display:flex;gap:12px">'+
+        '<button id="cm_cancel" style="flex:1;padding:10px 0;border-radius:12px;background:#475569;color:#fff;border:none">Cancel</button>'+
+        '<button id="cm_ok" style="flex:1;padding:10px 0;border-radius:12px;background:#2563eb;color:#fff;border:none">Confirm</button>'+
+      '</div></div>';
+    document.body.appendChild(m);
+    m.addEventListener('click', function(e){
+      if (e.target.id === 'cm_cancel'){ m.remove(); }
+      if (e.target.id === 'cm_ok'){ try{ onOK && onOK(); } finally { m.remove(); } }
+    }, true);
+  }
+
+  // === ACTIONS (exactly your instructions) ===
+  function handleHome(){
+    closeMenu();
+    var secAuth=document.getElementById('sec-auth'), secAssign=document.getElementById('sec-assignment');
+    if(secAssign) secAssign.classList.add('hidden');
+    if(secAuth) secAuth.classList.remove('hidden');
+    toast('Signed out');
+  }
+  function handleComplete(){
+    var jobId=getJobId(); if(!jobId){toast('No job selected'); return;}
+    confirmBox('Complete Job?','Notify the dispatcher. This Job #'+jobId+' will move from “In-Progress” to “Completed”.',function(){
+      if(window.__updateJobCompleted){ try{window.__updateJobCompleted(jobId);}catch(e){} }
+      try{ window.dispatchEvent(new CustomEvent('job:completed',{detail:{jobId:jobId}})); }catch(e){}
+      toast('Dispatcher notified — moved to Completed');
+      closeMenu();
+    });
+  }
+  function handlePhoto(){
+    var jobId=getJobId(); if(!jobId){toast('No job selected'); return;}
+    confirmBox('Attach Photo?','A photo will be attached to Job #'+jobId+' and will automatically upload to the dispatch board.', function(){
+      var input=document.getElementById('photoInput'); if(!input){toast('Camera unavailable'); return;}
+      input.onchange=function(){
+        var f=input.files&&input.files[0]; if(!f){closeMenu(); return;}
+        if(window.__uploadJobPhoto){
+          Promise.resolve().then(function(){return window.__uploadJobPhoto(jobId,f);})
+            .then(function(){toast('Photo uploaded for Job #'+jobId);})
+            .catch(function(){toast('Photo attach failed');})
+            .finally(function(){closeMenu(); input.value='';});
+        }else{
+          try{localStorage.setItem('photo_for_'+jobId,(f&&f.name)||'photo');}catch(e){}
+          toast('Photo attached to Job #'+jobId); closeMenu(); input.value='';
+        }
+      };
+      input.click();
+    });
+  }
+  function handleYardMove(){
+    var jobId=getJobId(); if(!jobId){toast('No job selected'); return;}
+    confirmBox('Yard Move','Your status will change to “YARD MOVE” and the dispatcher will be notified.',function(){
+      try{ window.dispatchEvent(new CustomEvent('driver:status',{detail:{jobId:jobId,status:'YARD MOVE'}})); }catch(e){}
+      toast('Status: YARD MOVE — dispatcher notified'); closeMenu();
+    });
+  }
+  function handleBreakdown(){
+    var jobId=getJobId(); if(!jobId){toast('No job selected'); return;}
+    confirmBox('BREAK DOWN','Broke down — status will change to “BREAK DOWN”. Next instruction: CALL DISPATCH. Confirm or Cancel.',function(){
+      try{ window.dispatchEvent(new CustomEvent('driver:status',{detail:{jobId:jobId,status:'BREAK DOWN'}})); }catch(e){}
+      toast('Status: BREAK DOWN — Call Dispatch'); closeMenu();
+    });
+  }
+
+  // Collapse any left drawers/panels quickly
+  function collapseLeftPanels(){
+    try{
+      document.querySelectorAll('input[type="checkbox"][id*="menu"], input[type="checkbox"][id*="drawer"], input[type="checkbox"][name*="menu"], input[type="checkbox"][name*="drawer"]').forEach(function(cb){ cb.checked = false; });
+      ['drawer-open','menu-open-left','sidebar-open','offcanvas-open'].forEach(function(cls){
+        if (document.body.classList.contains(cls)) document.body.classList.remove(cls);
+      });
+      document.querySelectorAll('.drawer,.sidebar,.side-panel,#drawer,#sidePanel,#slidePanel,#slideMenu,.offcanvas,[data-drawer]').forEach(function(el){
+        el.style.display='none'; el.style.maxWidth='0'; el.style.pointerEvents='none'; el.style.visibility='hidden';
+      });
+    }catch(e){}
+  }
+
+  // Delegated click binding for hamburger (capture) with stopImmediatePropagation
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest && e.target.closest('#menuBtn');
+    if (!btn) return;
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    e.stopPropagation(); e.preventDefault();
+    openMenu();
+  }, true);
+
+  // Close when clicking outside the menu card
+  document.addEventListener('click', function(e){
+    var sheet=document.getElementById('menuSheet');
+    if(!sheet || !sheet.classList.contains('show')) return;
+    var card=document.getElementById('menuModal');
+    if ((card && card.contains(e.target)) || (e.target.closest && e.target.closest('#menuBtn'))) return;
+    closeMenu();
+  }, true);
+
+  // Prevent background scroll on touch when menu open
+  document.addEventListener('touchmove', function(e){
+    var sheet=document.getElementById('menuSheet');
+    if(sheet && sheet.classList.contains('show')){ e.preventDefault(); }
+  }, {passive:false});
+
+  // Recenter on resize/orientation
+  window.addEventListener('resize', function(){ var s=document.getElementById('menuSheet'); if(s && s.classList.contains('show')) centerToPhone(); });
+  window.addEventListener('orientationchange', function(){ var s=document.getElementById('menuSheet'); if(s && s.classList.contains('show')) centerToPhone(); });
+
+  // ESC to close
+  document.addEventListener('keydown', function(ev){ var s=document.getElementById('menuSheet'); if(ev.key==='Escape' && s && s.classList.contains('show')) closeMenu(); });
+})();
+</script>
+
+
+<script id="chatgpt-kill-sidepanel-js" data-origin="chatgpt">
+(function(){
+  if (window.__killSidePanel) return; window.__killSidePanel = true;
+  function nukePanels(){
+    try{
+      document.querySelectorAll('.drawer, .sidebar, .side-panel, .offcanvas, #drawer, #sidePanel, #slidePanel, #slideMenu, [data-drawer], [data-offcanvas], [aria-controls*="drawer"], [aria-controls*="sidepanel"], [aria-controls*="sidebar"]').forEach(function(el){
+        try{ el.remove(); }catch(_){ try{ el.style.display='none'; el.style.visibility='hidden'; el.style.pointerEvents='none'; el.style.width='0'; el.style.maxWidth='0'; }catch(__){} }
+      });
+    }catch(e){}
+  }
+  if (document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', nukePanels, {once:true}); }
+  else { nukePanels(); }
+})();
+</script>
+
+
+<script id="chatgpt-kill-drawer-pointerdown" data-origin="chatgpt">
+(function(){
+  if (window.__killDrawerPointerdown) return; window.__killDrawerPointerdown = true;
+
+  function collapseLeftPanels(){
+    try{
+      document.querySelectorAll('input[type="checkbox"][id*="menu"], input[type="checkbox"][id*="drawer"], input[type="checkbox"][name*="menu"], input[type="checkbox"][name*="drawer"]').forEach(function(cb){ cb.checked = false; });
+      ['drawer-open','menu-open-left','sidebar-open','offcanvas-open'].forEach(function(cls){
+        if (document.body.classList.contains(cls)) document.body.classList.remove(cls);
+      });
+      document.querySelectorAll('.drawer,.sidebar,.side-panel,#drawer,#sidePanel,#slidePanel,#slideMenu,.offcanvas,[data-drawer],[data-offcanvas]').forEach(function(el){
+        el.style.display='none'; el.style.maxWidth='0'; el.style.pointerEvents='none'; el.style.visibility='hidden';
+      });
+    }catch(e){}
+  }
+
+  // Intercept as early as possible so label->checkbox doesn't toggle
+  function intercept(e){
+    var btn = e.target.closest && e.target.closest('#menuBtn');
+    if (!btn) return;
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    e.stopPropagation();
+    e.preventDefault();
+    // actively uncheck any drawer toggles in case they changed
+    collapseLeftPanels();
+    // open the centered menu on a microtask so UI stays smooth
+    setTimeout(function(){
+      try{
+        // Some builds expose openMenu; otherwise click will be handled by existing click listener
+        if (typeof openMenu === 'function') openMenu();
+      }catch(_){}
+    },0);
+  }
+
+  document.addEventListener('pointerdown', intercept, true);
+  document.addEventListener('touchstart', intercept, {capture:true, passive:false});
+  document.addEventListener('mousedown', intercept, true);
+})();
+</script>
+
+
+<script id="chatgpt-leftpanel-nuke-js" data-origin="chatgpt">
+(function(){
+  if (window.__leftPanelNuked) return; window.__leftPanelNuked = true;
+
+  function markHide(el){
+    try{
+      el.setAttribute('data-ghost-hidden','1');
+      el.style.display = 'none';
+      el.style.visibility = 'hidden';
+      el.style.pointerEvents = 'none';
+      el.style.maxWidth = '0';
+      el.style.width = '0';
+    }catch(e){}
+  }
+
+  function isLikelyLeftPanel(el){
+    try{
+      if (!el || el.closest('#menuSheet')) return false; // never hide the menu
+      if (el.id === 'sec-assignment' || el.closest('#sec-assignment')) return false; // never hide the phone
+      var r = el.getBoundingClientRect();
+      if (!r || !r.width || !r.height) return false;
+      // Must sit on the left quarter of the viewport
+      if (r.left > (window.innerWidth * 0.25)) return false;
+      // Must be tall-ish like a panel
+      if (r.height < window.innerHeight * 0.6) return false;
+      // Reasonable width (not full page)
+      if (r.width > window.innerWidth * 0.6) return false;
+      // Fixed/absolute/sticky is typical for side panels
+      var pos = getComputedStyle(el).position;
+      if (!(pos === 'fixed' || pos === 'absolute' || pos === 'sticky')) return false;
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function killLeftPanels(){
+    try{
+      // First: obvious selectors
+      document.querySelectorAll('nav,aside,.drawer,.sidebar,.side-panel,.offcanvas,#drawer,#sidePanel,#slidePanel,#slideMenu,[data-drawer],[data-offcanvas],[aria-controls*=\"drawer\"],[aria-controls*=\"sidepanel\"],[aria-controls*=\"sidebar\"]').forEach(markHide);
+      // Then: heuristic scan for any left-fixed/absolute tall blocks
+      var all = document.body.getElementsByTagName('*');
+      for (var i=0; i<all.length; i++){
+        var el = all[i];
+        if (isLikelyLeftPanel(el)) markHide(el);
+      }
+    }catch(e){}
+  }
+
+  // Run once on load and again whenever hamburger is pressed
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', killLeftPanels, {once:true});
+  } else {
+    killLeftPanels();
+  }
+
+  // Hook into early pointer events on the hamburger
+  function intercept(e){
+    var btn = e.target.closest && e.target.closest('#menuBtn');
+    if (!btn) return;
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    e.stopPropagation(); e.preventDefault();
+    killLeftPanels();
+    // Let the existing click listener open the menu
+    setTimeout(function(){ try{ if (typeof openMenu==='function') openMenu(); }catch(_){} },0);
+  }
+  document.addEventListener('pointerdown', intercept, true);
+  document.addEventListener('touchstart', intercept, {capture:true, passive:false});
+  document.addEventListener('mousedown', intercept, true);
+})();
+</script>
+
+
+<script id="phase3-hamburger-js-patch">
+(function(){
+  var btn = document.getElementById('menuBtn');
+  function openOverlayFast(e){
+    if (!btn) return;
+    if (e) { 
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      e.stopPropagation(); 
+      e.preventDefault();
+    }
+    try {
+      if (typeof ensureMenuSheet === 'function') ensureMenuSheet();
+      if (typeof toggleMenu === 'function') toggleMenu(true);
+      else {
+        var s = document.getElementById('menuSheet');
+        if (s){ s.classList.add('show'); s.removeAttribute('hidden'); s.setAttribute('aria-hidden','false'); }
+      }
+      // While menu open, disable selection/highlight globally
+      document.documentElement.classList.add('menu-open');
+      document.body.classList.add('menu-open');
+    } catch(_) {}
+  }
+  if (btn){
+    // Bind the earliest possible events for snappier feel on mobile Safari
+    ['pointerdown','touchstart','mousedown','click'].forEach(function(type){
+      btn.addEventListener(type, openOverlayFast, { capture: true, passive: false });
+    });
+  }
+})();
+</script>
+
+
+<script id="phase3-hamburger-js-patch-v2">
+(function(){
+  // Ensure 'Coastal City Logistics' title is centered without changing structure
+  try {
+    var candidates = document.querySelectorAll('.brand-grad h1, .brand-grad .brand-title, #brandBar h1, #brandBar .brand-title, header h1, header .brand-title');
+    for (var i=0;i<candidates.length;i++){
+      var el = candidates[i];
+      if (el && /Coastal City Logistics/i.test(el.textContent || '')) {
+        el.style.textAlign = 'center';
+        el.style.margin = '0 auto';
+        el.style.display = 'block';
+        el.style.width = '100%';
+        break;
+      }
+    }
+  } catch(_) {}
+
+  // Stronger suppression of left-side highlight on hamburger tap
+  try {
+    var btn = document.getElementById('menuBtn');
+    var leftContainers = document.querySelectorAll('.sidebar, .side-panel, .drawer, #sidebar, #sidePanel, #drawer, #slidePanel, #slideMenu');
+    function preventFocus(e){
+      if (!e) return;
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      e.stopPropagation(); e.preventDefault();
+      // blur any focused element that might cause highlight
+      if (document.activeElement && document.activeElement !== document.body) {
+        try { document.activeElement.blur(); } catch(__) {}
+      }
+      document.body.classList.add('menu-open');
+    }
+    if (btn){
+      ['pointerdown','touchstart','mousedown','click'].forEach(function(t){
+        btn.addEventListener(t, preventFocus, {capture:true, passive:false});
+      });
+    }
+    leftContainers.forEach(function(el){
+      ['pointerdown','touchstart','mousedown','focus','click'].forEach(function(t){
+        el.addEventListener(t, function(ev){
+          if (document.body.classList.contains('menu-open')) {
+            if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+            ev.stopPropagation(); ev.preventDefault();
+          }
+        }, true);
+      });
+    });
+  } catch(_) {}
+})();
+</script>
+
+
+<!-- ====== LEFT-PANEL HIGHLIGHT FIX (scoped; do not alter anything else) ====== -->
+<style id="left-panel-highlight-fix">
+/* Force the hamburger overlay to truly cover the whole viewport */
+#menuSheet { position: fixed !important; inset: 0 !important; width: 100% !important; height: 100% !important; z-index: 100000 !important; }
+#menuSheet .menu-backdrop { position: absolute !important; inset: 0 !important; background: rgba(2,6,23,.85) !important; }
+/* While menu is open, completely disable selection/tap highlight anywhere behind it */
+
+/* Any possible left drawer/panel gets no interaction or visual state while menu is open */
+
+</style>
+<script id="left-panel-highlight-fix-js">
+// Ensure the overlay is appended to <body> so the backdrop spans the full page
+(function(){
+  try {
+    var sheet = document.getElementById('menuSheet');
+    if (sheet && sheet.parentElement !== document.body) {
+      document.body.appendChild(sheet);
+    }
+  } catch (_) {}
+})();
+</script>
+<!-- ====== END LEFT-PANEL HIGHLIGHT FIX ====== -->
+
+
+
+
+
+
+
+
+
+
+
+
+<style id="menu-center-v9">
+#menuSheet { z-index: 100000 !important; }
+#menuSheet .menu-backdrop { display: none !important; } /* no full-screen dim */
+</style>
+<script id="menu-center-js-v9">
+(function(){
+  try{
+    var sheet = document.getElementById('menuSheet');
+    if (!sheet) return;
+
+    // Find the visual phone by geometry: tall rounded rect on the LEFT half
+    function isShown(el){ if(!el) return false; var s=getComputedStyle(el); return s.display!=='none' && s.visibility!=='hidden' && el.offsetWidth>0 && el.offsetHeight>0; }
+    function scorePhone(el){
+      var r = el.getBoundingClientRect();
+      if (r.width < 280 || r.width > 520) return -1;
+      if (r.height < 550 || r.height > 1200) return -1;
+      var ar = r.height / r.width;
+      if (ar < 1.6 || ar > 2.6) return -1;
+      var br = parseFloat(getComputedStyle(el).borderTopLeftRadius)||0;
+      if (br < 12) return -1;
+      // bias towards left half and visually centered vertically
+      var xCenter = r.left + r.width/2;
+      var yCenter = r.top + r.height/2;
+      var leftBias = Math.max(0, (window.innerWidth*0.5 - xCenter)); // positive when in left half
+      var area = r.width*r.height;
+      return area + leftBias*500 - Math.abs(yCenter - window.innerHeight/2)*250;
+    }
+    function findPhone(){
+      var candidates = Array.from(document.querySelectorAll('body *')).filter(isShown);
+      var best=null, bestScore=-1;
+      for (var i=0;i<candidates.length;i++){
+        var sc = scorePhone(candidates[i]);
+        if (sc > bestScore){ best=candidates[i]; bestScore=sc; }
+      }
+      return best || document.body;
+    }
+    var phone = findPhone();
+
+    // Keep the dropdown attached to the phone so absolute centering is relative to it
+    if (sheet.parentElement !== phone) phone.appendChild(sheet);
+
+    function panel(){
+      // first visible child that looks like the dropdown
+      var kids = Array.from(sheet.querySelectorAll('.menu,.menu-panel,.dropdown,.sheet,.popover, *')).filter(isShown);
+      return kids[0] || null;
+    }
+
+    function center(){
+      var p = panel();
+      if (!p || !isShown(sheet)) return;
+      var r = phone.getBoundingClientRect();
+      // Center the container
+      sheet.style.position = 'absolute';
+      sheet.style.left = '50%';
+      sheet.style.top = '50%';
+      sheet.style.transform = 'translate(-50%, -50%)';
+      sheet.style.width = 'auto';
+      sheet.style.height = 'auto';
+      sheet.style.pointerEvents = 'auto';
+      // Keep panel from drifting
+      p.style.position = 'relative';
+      p.style.left = '0'; p.style.top = '0'; p.style.margin = '0 auto';
+      p.style.maxWidth = Math.floor(r.width*0.9) + 'px';
+      p.style.maxHeight = Math.floor(r.height*0.85) + 'px';
+    }
+
+    var mo = new MutationObserver(center);
+    mo.observe(sheet, {attributes:true, childList:true, subtree:true});
+    window.addEventListener('resize', center, {passive:true});
+    window.addEventListener('scroll', center, {passive:true});
+    setInterval(function(){ if (isShown(sheet)) center(); }, 250);
+    setTimeout(center, 0);
+  }catch(e){}
+})();
+</script>
+<!-- ====== END PHASE 3 — LOCK MENU TO PHONE CENTER (v9) ====== -->
+
+<!-- ====== PHASE 3 — PIN DROPDOWN TO PHONE CENTER (v10) ====== -->
+<style id="menu-center-v10">
+/* No backdrop; no global highlight */
+#menuSheet .menu-backdrop { display: none !important; background: transparent !important; }
+/* Hard overrides for any library-driven positioning */
+#menuSheet, 
+#menuSheet > .menu, 
+#menuSheet > .menu-panel, 
+#menuSheet > .dropdown, 
+#menuSheet > .sheet, 
+#menuSheet > .popover {
+  right: auto !important;
+  left: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+}
+</style>
+<script id="menu-center-js-v10">
+(function(){
+  try{
+    var sheet = document.getElementById('menuSheet');
+    if (!sheet) return;
+
+    function shown(el){ if(!el) return false; var s=getComputedStyle(el); return s.display!=='none' && s.visibility!=='hidden' && el.offsetWidth>0 && el.offsetHeight>0; }
+
+    // Choose the phone by explicit ids first, fallback to geometry on the LEFT
+    function findPhone(){
+      var picks = ['#phase3','.phase3','#driverPhone','#phoneMock','.phone','.device','.driver-app','.app-shell','#app','#root'];
+      for (var i=0;i<picks.length;i++){ var el=document.querySelector(picks[i]); if (el) return el; }
+      var best=null,bestScore=-1;
+      Array.from(document.querySelectorAll('body *')).forEach(function(e){
+        var r=e.getBoundingClientRect();
+        if (r.width<280||r.width>520||r.height<550||r.height>1200) return;
+        var br=parseFloat(getComputedStyle(e).borderTopLeftRadius)||0;
+        if (br<12) return;
+        var score=r.width*r.height - Math.abs((r.top+r.height/2)-window.innerHeight/2)*250 + Math.max(0,(window.innerWidth*0.5-(r.left+r.width/2)))*500;
+        if (score>bestScore){best=e;bestScore=score;}
+      });
+      return best||document.body;
+    }
+    var phone = findPhone();
+
+    // Make sure the sheet is inside the phone so centering is relative to it
+    if (sheet.parentElement !== phone) phone.appendChild(sheet);
+
+    // Find the visible panel (rounded card)
+    function panel(){
+      var cands = Array.from(sheet.querySelectorAll('.menu,.menu-panel,.dropdown,.sheet,.popover, *')).filter(shown);
+      return cands[0] || null;
+    }
+
+    function center(){
+      var p = panel(); if (!p || !shown(sheet)) return;
+      var pr = phone.getBoundingClientRect();
+      // Center the sheet fixed to viewport, aligned to phone center
+      var cx = pr.left + pr.width/2;
+      var cy = pr.top  + pr.height/2;
+      sheet.style.position = 'fixed';
+      sheet.style.left = cx + 'px';
+      sheet.style.top  = cy + 'px';
+      sheet.style.transform = 'translate(-50%, -50%)';
+      sheet.style.zIndex = '100000';
+      sheet.style.pointerEvents = 'none'; // only panel clickable
+      // Neutralize any library transforms/positions on the panel itself
+      p.style.position = 'relative';
+      p.style.left = '0'; p.style.top = '0'; p.style.right = 'auto'; p.style.bottom = 'auto';
+      p.style.transform = 'none';
+      p.style.margin = '0 auto';
+      p.style.maxWidth = Math.floor(pr.width*0.9) + 'px';
+      p.style.maxHeight = Math.floor(pr.height*0.85) + 'px';
+      p.style.pointerEvents = 'auto';
+    }
+
+    // Watch for any library re-position attempts and override
+    var obs = new MutationObserver(center);
+    obs.observe(sheet, {attributes:true, childList:true, subtree:true, characterData:true});
+    window.addEventListener('resize', center, {passive:true});
+    window.addEventListener('scroll', center, {passive:true});
+    setInterval(function(){ if (shown(sheet)) center(); }, 120);
+
+    setTimeout(center, 0);
+  }catch(e){}
+})();
+</script>
+<!-- ====== END v10 ====== -->
+
+<!-- ====== NO-SHIFT PHONE LOCK (v11) ====== -->
+<style id="no-shift-phone-lock">
+/* When locking, we freeze the phone visually and keep layout with a placeholder */
+.phone-lock-placeholder { visibility: hidden !important; pointer-events: none !important; }
+</style>
+<script id="no-shift-phone-lock-js">
+(function(){
+  try{
+    var sheet = document.getElementById('menuSheet');
+    if (!sheet) return;
+
+    function shown(el){ if(!el) return false; var s=getComputedStyle(el); return s.display!=='none' && s.visibility!=='hidden' && el.offsetWidth>0 && el.offsetHeight>0; }
+
+    // Reuse/derive the same phone element we centered against
+    function findPhone(){
+      var picks = ['#phase3','.phase3','#driverPhone','#phoneMock','.phone','.device','.driver-app','.app-shell','#app','#root'];
+      for (var i=0;i<picks.length;i++){ var el=document.querySelector(picks[i]); if (el) return el; }
+      return document.querySelector('.iphone-frame, .device-frame') || document.body;
+    }
+    var phone = findPhone();
+    var placeholder = null;
+    var saved = null;
+
+    function lockPhone(){
+      if (!phone || placeholder || !shown(sheet)) return;
+      var r = phone.getBoundingClientRect();
+      // Create placeholder to preserve layout
+      placeholder = document.createElement('div');
+      placeholder.className = 'phone-lock-placeholder';
+      placeholder.style.width = r.width + 'px';
+      placeholder.style.height = r.height + 'px';
+      phone.parentNode.insertBefore(placeholder, phone);
+
+      // Save inline styles to restore
+      saved = {
+        position: phone.style.position,
+        left: phone.style.left,
+        top: phone.style.top,
+        right: phone.style.right,
+        bottom: phone.style.bottom,
+        width: phone.style.width,
+        height: phone.style.height,
+        margin: phone.style.margin,
+        transform: phone.style.transform,
+        transition: phone.style.transition
+      };
+
+      // Fix the phone where it is (no movement)
+      phone.style.position = 'fixed';
+      phone.style.left = r.left + 'px';
+      phone.style.top = r.top + 'px';
+      phone.style.width = r.width + 'px';
+      phone.style.height = r.height + 'px';
+      phone.style.margin = '0';
+      phone.style.transform = 'none';
+      phone.style.transition = 'none';
+      phone.style.right = 'auto';
+      phone.style.bottom = 'auto';
+    }
+
+    function unlockPhone(){
+      if (!phone) return;
+      if (saved){
+        phone.style.position = saved.position;
+        phone.style.left = saved.left;
+        phone.style.top = saved.top;
+        phone.style.right = saved.right;
+        phone.style.bottom = saved.bottom;
+        phone.style.width = saved.width;
+        phone.style.height = saved.height;
+        phone.style.margin = saved.margin;
+        phone.style.transform = saved.transform;
+        phone.style.transition = saved.transition;
+        saved = null;
+      }
+      if (placeholder && placeholder.parentNode){
+        placeholder.parentNode.removeChild(placeholder);
+        placeholder = null;
+      }
+    }
+
+    function sync(){
+      var open = shown(sheet);
+      if (open) lockPhone(); else unlockPhone();
+    }
+
+    var obs = new MutationObserver(sync);
+    obs.observe(sheet, {attributes:true, childList:true, subtree:true});
+    window.addEventListener('resize', sync, {passive:true});
+    window.addEventListener('scroll', sync, {passive:true});
+    setInterval(sync, 150);
+    setTimeout(sync, 0);
+  }catch(e){}
+})();
+</script>
+<!-- ====== END NO-SHIFT PHONE LOCK ====== -->
+
+<!-- ====== LAYOUT-SHIFT GUARD (v12) ====== -->
+<style id="layout-shift-guard-v12">
+/* Always reserve scrollbar space to prevent horizontal nudge */
+html { overflow-y: scroll !important; }
+/* Ensure opening the menu never changes document overflow/padding */
+html, body { overflow: auto !important; padding-right: 0 !important; }
+/* Prevent scroll anchoring jumps */
+html { overflow-anchor: none !important; }
+/* Smooth appearance for menu panel only (no page movement) */
+#menuSheet, #menuSheet * { transition: opacity .12s ease-out, transform .12s ease-out; }
+</style>
+<script id="layout-shift-guard-js-v12">
+(function(){
+  try{
+    var sheet = document.getElementById('menuSheet');
+    if (!sheet) return;
+    // If any previous logic adds 'menu-open' or sets overflow hidden, undo it
+    function undoPageLocks(){
+      document.documentElement.classList.remove('menu-open');
+      document.body.classList.remove('menu-open');
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    // Observe for any attribute/class changes and immediately revert
+    var mo = new MutationObserver(undoPageLocks);
+    mo.observe(document.documentElement, {attributes:true, attributeFilter:['class','style']});
+    mo.observe(document.body, {attributes:true, attributeFilter:['class','style']});
+    // Also trigger on interval as a safety net
+    setInterval(undoPageLocks, 120);
+    undoPageLocks();
+  }catch(e){}
+})();
+</script>
+<!-- ====== END LAYOUT-SHIFT GUARD (v12) ====== -->
+
+
+
+<!-- ====== PHASE 2: TOP-RIGHT EMPLOYEE PILL — FORCE HIDE (v12.2) ====== -->
+<style id="phase2-pill-forcehide">
+/* Defensive CSS: collapse common pill/badge classes inside Phase 2 */
+#phase2 .badge, #phase2 .pill, #phase2 [class*="pill"], #phase2 [class*="badge"] {
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  visibility: hidden !important;
+}
+</style>
+<script id="phase2-pill-forcehide-js">
+(function(){
+  try{
+    function isVisible(el){
+      if(!el) return false;
+      var s=getComputedStyle(el);
+      if(s.display==='none'||s.visibility==='hidden') return false;
+      var r=el.getBoundingClientRect();
+      return r.width>0 && r.height>0;
+    }
+    function phase2Root(){
+      return document.getElementById('phase2') ||
+             document.querySelector('.phase2') ||
+             document.querySelector('[data-phase="2"]') ||
+             document.body;
+    }
+    function looksLikePill(el){
+      var txt=(el.textContent||'').trim();
+      if(!/^[0-9]{3,10}$/.test(txt)) return false;
+      var r=el.getBoundingClientRect();
+      // Must be near top-right quadrant of the screen
+      var nearTopRight = (r.top < window.innerHeight*0.25) && (r.right > window.innerWidth*0.75);
+      // Rounded corners typical of a pill
+      var br=parseFloat(getComputedStyle(el).borderTopLeftRadius)||0;
+      return nearTopRight && br>=10;
+    }
+    function hidePill(){
+      var root = phase2Root();
+      var nodes = root.querySelectorAll('*');
+      for(var i=0;i<nodes.length;i++){
+        var el=nodes[i];
+        if(!isVisible(el)) continue;
+        if(looksLikePill(el)){
+          el.setAttribute('aria-hidden','true');
+          el.dataset.hiddenPhase2Pill='1';
+          Object.assign(el.style, {
+            visibility:'hidden', width:'0px', height:'0px', padding:'0px', margin:'0px',
+            border:'0', color:'transparent', background:'transparent', lineHeight:'0', fontSize:'0'
+          });
+          // Also neutralize container if it's absolutely/fixed positioned wrapper
+          if(el.parentElement && /absolute|fixed/.test(getComputedStyle(el.parentElement).position)){
+            el.parentElement.style.pointerEvents='none';
+          }
+        }
+      }
+    }
+    // Run on load and observe DOM for screen changes
+    var mo=new MutationObserver(function(){ hidePill(); });
+    mo.observe(document.documentElement, {childList:true, subtree:true, attributes:true});
+    window.addEventListener('resize', hidePill, {passive:true});
+    setInterval(hidePill, 200);
+    hidePill();
+  }catch(e){}
+})();
+</script>
+<!-- ====== END PHASE 2: FORCE HIDE v12.2 ====== -->
+<style id="hamburger_min_reset">
+  #menuBtn {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    background: transparent !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+  }
+</style>
+<script id="hamburger_min_forwarder">
+(function(){
+  var btn = document.getElementById('menuBtn');
+  if (!btn) return;
+
+  // Create a fixed, high-z tap mirror that forwards events to the real button
+  var mirror = document.createElement('button');
+  mirror.id = 'menuBtnTapMirror';
+  mirror.setAttribute('aria-hidden','true');
+  var s = mirror.style;
+  s.position = 'fixed';
+  s.width = '52px';
+  s.height = '52px';
+  s.zIndex = '2147483647';
+  s.background = 'transparent';
+  s.border = '0';
+  s.padding = '0';
+  s.margin = '0';
+  s.outline = 'none';
+  s.boxShadow = 'none';
+  s.WebkitTapHighlightColor = 'transparent';
+  s.touchAction = 'manipulation';
+  s.cursor = 'pointer';
+  s.pointerEvents = 'auto';
+  s.opacity = '0'; // invisible, does not change visuals
+
+  document.body.appendChild(mirror);
+
+  function sync(){
+    var r = btn.getBoundingClientRect();
+    if (!r.width || !r.height) { return; }
+    mirror.style.left = (r.left - 4) + 'px';
+    mirror.style.top  = (r.top  - 4) + 'px';
+  }
+  ['load','resize','scroll','orientationchange'].forEach(function(ev){
+    window.addEventListener(ev, sync, {passive:true});
+  });
+  var mo = new MutationObserver(sync);
+  mo.observe(document.documentElement, {subtree:true, attributes:true, childList:true});
+  sync();
+
+  function forward(evType, srcEv){
+    var evt = new MouseEvent(evType, {
+      bubbles: true,
+      cancelable: true,
+      view: window
+    });
+    btn.dispatchEvent(evt);
+  }
+
+  // Forward primary gestures to the original button (do not stop propagation globally)
+  ['pointerdown','touchstart','click'].forEach(function(t){
+    mirror.addEventListener(t, function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      forward('click', e); // rely on your original click handler
+    }, {capture:true, passive:false});
+  });
+})();
+</script>
+<script>
+/* endtrip-inject-route.v3.js — non-invasive
+   Ensures an "End Trip" row exists in the menu and routes it EXACTLY like Home.
+   No edits to your app code. iPhone/Safari safe.
+*/
+(function(){
+  var LABEL = 'End Trip';
+
+  function txt(el){ return (el && (el.textContent||el.innerText)||'').trim(); }
+  function isEndTrip(el){ return txt(el).toLowerCase() === LABEL.toLowerCase(); }
+
+  function findMenuSheet(){ return document.getElementById('menuSheet'); }
+  function findMenuList(sheet){
+    if (!sheet) return null;
+    return sheet.querySelector('.menu-list') || sheet.querySelector('.menu-card') || sheet;
+  }
+  function hasEndTrip(list){
+    if(!list) return false;
+    var nodes = list.querySelectorAll('.menu-item, [data-action], [data-act]');
+    for (var i=0;i<nodes.length;i++){ if (isEndTrip(nodes[i])) return true; }
+    return false;
+  }
+  function insertEndTrip(list){
+    if (!list || hasEndTrip(list)) return;
+    try{
+      // Divider like others
+      var hr = document.createElement('hr');
+      hr.className = 'menu-hr';
+      list.appendChild(hr);
+      // Button
+      var b = document.createElement('button');
+      b.className = 'menu-item';
+      // Route like HOME so your existing router handles it
+      b.setAttribute('data-action','home');
+      b.setAttribute('data-act','home');
+      b.textContent = LABEL;
+      list.appendChild(b);
+    }catch(_){}
+  }
+  function ensureEndTrip(){
+    var sheet = findMenuSheet();
+    if (!sheet) return;
+    var list  = findMenuList(sheet);
+    insertEndTrip(list);
+  }
+
+  // keep trying briefly (covers late builders)
+  function kickEnsure(){
+    ensureEndTrip();
+    setTimeout(ensureEndTrip, 0);
+    setTimeout(ensureEndTrip, 60);
+    setTimeout(ensureEndTrip, 150);
+    setTimeout(ensureEndTrip, 300);
+  }
+
+  // Run once when DOM is ready
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', kickEnsure, {once:true});
+  } else {
+    kickEnsure();
+  }
+
+  // Observe for menu open / DOM changes
+  var mo = new MutationObserver(function(){
+    var sheet = findMenuSheet();
+    if (sheet && sheet.classList && sheet.classList.contains('show')) kickEnsure();
+  });
+  try{ mo.observe(document.documentElement, {subtree:true, childList:true, attributes:true, attributeFilter:['class']}); }catch(_){}
+
+  // Routing: force-close menu then call existing Home logic
+  function strongCloseMenu(){
+    try{ if (typeof closeMenu === 'function'){ closeMenu(); return; } }catch(_){}
+    try{
+      var s = findMenuSheet();
+      if (!s) return;
+      s.classList.remove('show');
+      s.classList.add('hidden');
+      s.setAttribute('hidden','hidden');
+      s.setAttribute('aria-hidden','true');
+    }catch(_){}
+  }
+  function goHome(){
+    strongCloseMenu();
+    try{ if (typeof handleHome === 'function'){ handleHome(); return; } }catch(_){}
+    // Fallback: show Phase 1 section
+    try{
+      var A=document.getElementById('sec-auth'), S=document.getElementById('sec-shift'), P=document.getElementById('sec-assignment');
+      if(P) P.classList.add('hidden'); if(S) S.classList.add('hidden'); if(A) A.classList.remove('hidden');
+    }catch(_){}
+  }
+
+  // Capture-phase intercept just for End Trip (robust on iPhone)
+  function closestMenuItem(t){
+    var el = t;
+    for (var i=0;i<6 && el;i++, el=el.parentElement){
+      if (el.matches && el.matches('#menuSheet .menu-item, #menuSheet [data-action], #menuSheet [data-act]')) return el;
+    }
+    return null;
+  }
+  function onTap(e){
+    try{
+      var item = closestMenuItem(e.target);
+      if (!item) return;
+      if (!isEndTrip(item)) return;
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      if (e.stopPropagation) e.stopPropagation();
+      if (e.preventDefault) e.preventDefault();
+      goHome();
+    }catch(_){}
+  }
+  document.addEventListener('touchstart', onTap, {capture:true, passive:false});
+  document.addEventListener('click', onTap, true);
+})();
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- === BEGIN: En Route DEMO v11 (maps title not bold + 20% smaller buttons) === -->
+<style>
+/* Base smaller modal (same as v10) */
+.ccx-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999}
+.ccx-backdrop.open{display:flex}
+.ccx-modal{width:min(84vw,400px);background:#0b1422;border:1px solid rgba(59,130,246,.18);border-radius:16px;box-shadow:0 18px 52px rgba(0,0,0,.5),0 0 0 1px rgba(59,130,246,.06) inset;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial}
+.ccx-head{padding:14px 16px 6px;font-size:18px;font-weight:800;letter-spacing:.2px}
+.ccx-body{padding:0 16px 12px;color:#cbd5e1;font-size:14.5px;line-height:1.55;border-bottom:1px solid rgba(148,163,184,.12)}
+.ccx-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 12px}
+/* 20% smaller buttons (48px -> ~38px) */
+.ccx-btn{border:none;border-radius:12px;height:38px;font-size:14px;font-weight:700;cursor:pointer;transition:transform .06s ease,filter .15s ease,background .2s ease}
+.ccx-btn:active{transform:translateY(1px)}
+.ccx-btn.cancel{background:#2b3442;color:#d1d5db}
+.ccx-btn.confirm{background:#2f5bff;color:#fff}
+.ccx-btn.cancel:hover,.ccx-btn.confirm:hover{filter:brightness(1.06)}
+.ccx-body:empty{display:none}
+
+/* Maps confirm: un-bold the title/body only for that modal */
+.ccx-modal.ccx-maps .ccx-head{font-weight:400;letter-spacing:.1px}
+.ccx-modal.ccx-maps .ccx-body{font-size:14px}
+</style>
+<script>
+(function(){
+  const ORIGIN_ADDR = "Long Beach Port, 415 W Ocean Blvd, Long Beach, CA 90802";
+  const DEST_ADDR   = "2350 E Dominguez St, Carson, CA 90810"; // Yusen Logistics
+
+  function setDemoVerbiage(){
+    const fromEl = document.getElementById('f_from');
+    const toEl   = document.getElementById('f_loadin');
+    if (fromEl){ if ('value' in fromEl) fromEl.value = "Long Beach Port"; else fromEl.textContent = "Long Beach Port"; }
+    if (toEl){ if ('value' in toEl) toEl.value = "Yusen Logistics"; else toEl.textContent = "Yusen Logistics"; }
+  }
+
+  function ensureModal(){
+    let b = document.getElementById('ccxBackdrop');
+    if (b) return b;
+    b = document.createElement('div');
+    b.id = 'ccxBackdrop';
+    b.className = 'ccx-backdrop';
+    b.innerHTML = `
+      <div class="ccx-modal" role="dialog" aria-modal="true" aria-labelledby="ccxTitle">
+        <div class="ccx-head" id="ccxTitle">Confirm</div>
+        <div class="ccx-body" id="ccxMsg"></div>
+        <div class="ccx-actions">
+          <button class="ccx-btn cancel" id="ccxCancel">Cancel</button>
+          <button class="ccx-btn confirm" id="ccxOk">Confirm</button>
+        </div>
+      </div>`;
+    document.body.appendChild(b);
+    return b;
+  }
+
+  function promptModal({title, message, okText="Confirm", cancelText="Cancel", onConfirm, variant}){
+    const b = ensureModal();
+    const modal = b.querySelector('.ccx-modal');
+    const t = b.querySelector('#ccxTitle');
+    const m = b.querySelector('#ccxMsg');
+    const ok = b.querySelector('#ccxOk');
+    const cancel = b.querySelector('#ccxCancel');
+
+    // Variant class for maps (to de-bold title)
+    if (variant === "maps") modal.classList.add('ccx-maps'); else modal.classList.remove('ccx-maps');
+
+    t.textContent = title || "Confirm";
+    m.textContent = message || "";
+    ok.textContent = okText;
+    cancel.textContent = cancelText;
+
+    return new Promise((resolve)=>{
+      function close(val){
+        ok.removeEventListener('click', onOk, true);
+        cancel.removeEventListener('click', onCancel, true);
+        b.classList.remove('open'); document.body.style.overflow='';
+        resolve(val);
+      }
+      function onOk(e){ e.stopPropagation(); if (typeof onConfirm==='function'){ try{ onConfirm(); }catch(_){} } close(true); }
+      function onCancel(e){ e.stopPropagation(); close(false); }
+
+      ok.addEventListener('click', onOk, true);
+      cancel.addEventListener('click', onCancel, true);
+      document.body.style.overflow='hidden';
+      b.classList.add('open');
+    });
+  }
+
+  function getFieldText(id){ const el = document.getElementById(id); if(!el) return ""; return ('value' in el? (el.value||'').trim() : (el.textContent||'').trim()); }
+  function getSelectedText(id){ const s=document.getElementById(id); const o=s&&s.options?s.options[s.selectedIndex]:null; return o?(o.textContent||''):""; }
+  function getCurrentAssignment(){
+    const jobLabel = getSelectedText('assignmentSelect');
+    const m = /Job #([^\s•]+)/.exec(jobLabel||"");
+    const jobId = (m?m[1]:(getFieldText('f_jobid')||'')).replace(/^#?/,'');
+    const cont = getFieldText('f_container'); const win = getFieldText('f_window');
+    return { jobId, cont, win };
+  }
+
+  async function notifyBackend(payload){
+    if (typeof window.__sendEnrouteNotify === 'function') return await window.__sendEnrouteNotify(payload);
+    return { ok:true, demo:true };
+  }
+
+  function openMaps(){
+    const url = "https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(ORIGIN_ADDR)+"&destination="+encodeURIComponent(DEST_ADDR)+"&travelmode=driving";
+    window.open(url, "_blank");
+  }
+
+  async function handleEnroute(){
+    const job = getCurrentAssignment();
+    const ok = await promptModal({ title:"Confirm En Route?", message:"Mark En Route and notify the customer?", okText:"Confirm", cancelText:"Cancel" });
+    if (!ok) return;
+    try { await notifyBackend({ ...job, origin:ORIGIN_ADDR, destination:DEST_ADDR, message:"Driver is on his way" }); } catch(_){}
+    await promptModal({ title:"Open Google Maps?", message:"", okText:"Open", cancelText:"Stay", onConfirm: ()=>openMaps(), variant:"maps" });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    setDemoVerbiage();
+    const btn = document.getElementById('btnEnRoute') || document.querySelector('[data-action="enroute"]');
+    if (btn){ btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); handleEnroute(); }, {capture:true}); }
+    document.addEventListener('click', function(e){ const t=e.target; if (!t) return; if (t.matches && t.matches('[data-action="enroute"]')){ e.preventDefault(); handleEnroute(); } }, true);
+  });
+})();
+</script>
+<!-- === END: En Route DEMO v11 (maps title not bold + 20% smaller buttons) === -->
+</body>
+</html>
