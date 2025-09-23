@@ -506,7 +506,25 @@ html, body, .iphone, .screen, #sec-assignment, .brand-grad {
   }
 
   // Action modal (En Route / Arrived)
-  const actionModal = makeModal('actionModal2', 'Confirm', 'Are you sure?');
+  // === Directions helper: build a Google Maps DIRECTIONS URL from the current assignment ===
+function _txt(id){ const el=document.getElementById(id); return (el && (el.textContent||'').trim()) || ''; }
+// Clean "(Torrance)" and line breaks -> "Yusen Logistics Torrance"
+function _place(s){ return (s||'').replace(/[\r\n]+/g,' ').replace(/\s*\((.*?)\)\s*/g,' $1 ').replace(/\s+/g,' ').trim(); }
+
+function buildDirectionsUrl(){
+  const rawFrom = _txt('f_from');
+  const rawTo   = _txt('f_loadin') || _txt('f_from'); 
+  const origin      = _place(rawFrom);
+  const destination = _place(rawTo);
+  let url = 'https://www.google.com/maps/dir/?api=1';
+  if (destination && destination !== '—') url += `&destination=${encodeURIComponent(destination)}`;
+  if (origin && origin !== '—' && origin !== destination) url += `&origin=${encodeURIComponent(origin)}`;
+  url += '&travelmode=driving';
+  return url;
+}
+// === End Directions helper ===
+
+const actionModal = makeModal('actionModal2', 'Confirm', 'Are you sure?');
   const aTitle = byId('actionModal2__title');
   const aText  = byId('actionModal2__text');
   const aCancel= byId('actionModal2__cancel');
@@ -520,8 +538,16 @@ html, body, .iphone, .screen, #sec-assignment, .brand-grad {
   }
   aCancel.addEventListener('click', ()=> hideModal(actionModal));
   aOK.addEventListener('click', ()=>{ 
-    const kind = aOK.dataset.kind; hideModal(actionModal);
-    toast(kind==='enroute' ? 'Status set: En Route' : 'Status set: Arrived');
+    const kind = aOK.dataset.kind; 
+    hideModal(actionModal);
+
+    if (kind === 'enroute') {
+      const url = buildDirectionsUrl();
+      try { window.open(url, '_blank'); } catch(_) { location.href = url; }
+      toast('Status set: En Route');
+    } else {
+      toast('Status set: Arrived');
+    }
   });
 
   const btnEn = byId('btnEnRoute'), btnArr = byId('btnArrived');
