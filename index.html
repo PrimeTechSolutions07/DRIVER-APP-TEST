@@ -46,6 +46,65 @@
 /* Guards for menu button placement/clickability */
 .assign-header, .status-bar, .phone-frame { position: relative; }
 #menuBtn { position:absolute !important; top:2px !important; left:4px !important; z-index:100000 !important; pointer-events:auto !important; }
+
+/* === Clean Driver History Calendar (template style, 15% smaller) === */
+#drvHistModal { display: flex !important; align-items: center; justify-content: center; }
+#drvHistModal .tpl-cal-card {
+  position: relative;
+  width: 92vw; max-width: 520px;
+  background: #0b1220; color:#dbeafe;
+  border: 1px solid #334155; border-radius: 16px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.45);
+  padding: 16px;
+  transform: scale(0.74);
+  transform-origin: center;
+}
+#drvHistModal .tpl-head {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom: 12px;
+}
+#drvHistModal .tpl-month { font-weight: 800; font-size: 20px; letter-spacing:.3px; color:#e5e7eb; }
+#drvHistModal .tpl-nav { display:flex; gap:10px; }
+#drvHistModal .tpl-btn {
+  width: 36px; height: 36px; display:flex; align-items:center; justify-content:center;
+  border-radius: 12px; border:1px solid #334155; background:#111827; color:#e5e7eb;
+}
+#drvHistModal .tpl-grid {
+  border: 1px solid #334155; border-radius: 12px; padding: 12px;
+  background: #0f172a;
+}
+#drvHistModal .tpl-dow {
+  display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:10px;
+  color:#94a3b8; font-weight:600; font-size:13px; text-align:center;
+}
+#drvHistModal .tpl-days {
+  display:grid; grid-template-columns:repeat(7,1fr); gap:10px;
+}
+#drvHistModal .tpl-day {
+  height: 48px; display:flex; align-items:center; justify-content:center;
+  border-radius: 12px; border:1px solid #334155; background:transparent;
+  font-weight:700; font-size:18px; color:#e5e7eb;
+}
+#drvHistModal .tpl-day.muted { opacity:.35; }
+#drvHistModal .tpl-day.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+#drvHistModal .jobs-pill {
+  position:absolute; left:16px; bottom:14px;
+  background: linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:#fff; border:1px solid rgba(147,197,253,.6);
+  padding:8px 12px; font-weight:800; font-size:14px; border-radius:999px;
+  box-shadow:0 8px 20px rgba(0,0,0,.35); pointer-events:none;
+}
+#drvHistModal .tpl-footer {
+  margin-top: 12px; display:flex; justify-content:flex-end;
+}
+#drvHistModal .tpl-export {
+  background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:0;
+  border-radius: 12px; padding: 10px 14px; font-weight:800;
+}
+/* Hide any previous calendar/list inside the modal so only the template shows */
+#drvHistModal .dh-cal, #drvHistModal .dh-list, #drvHistModal #dh_table_wrap, 
+#drvHistModal .calendar, #drvHistModal .dh-extra { display:none !important; }
+
 </style>
 
   <meta charset="utf-8" />
@@ -2047,5 +2106,803 @@ html { overflow-anchor: none !important; }
   window.getToAddress = getToAddress;
 })();
 </script>
+<!-- Driver History Add-on (v4) : compressed modal + custom large calendar + demo seed -->
+<style>
+.dh-menu-item{display:block;padding:14px 18px;border-top:1px solid rgba(255,255,255,.08);font-weight:800;text-align:center;cursor:pointer}
+#drvHistModal{font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial}
+#drvHistModal .dh-card{background:#0f172a;border:1px solid #334155;border-radius:11px;padding:10px;width:min(72vw,360px);max-height:62vh;box-shadow:0 24px 60px rgba(0,0,0,.4);color:#e5e7eb;display:flex;flex-direction:column;gap:8px}
+#drvHistModal .dh-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
+#drvHistModal h3{font-size:16px;font-weight:800;margin:0}
+#drvHistModal #dh_close{background:#475569;border:none;color:#fff;border-radius:10px;padding:6px 10px}
+#drvHistModal label{font-size:12px;color:#94a3b8;margin-top:2px}
+#drvHistModal #dh_table_wrap{border:1px solid #334155;border-radius:12px;overflow:auto;max-height:36vh}
+#drvHistModal #dh_export{background:#2563eb;border:none;color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
+.dh-cal{user-select:none;background:#0b1220;border:1px solid #334155;border-radius:12px;padding:8px}
+.dh-cal .dh-cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dh-cal .dh-cal-head button{background:#1f2937;border:1px solid #334155;color:#e5e7eb;border-radius:10px;padding:6px 10px;font-weight:600}
+.dh-cal .dh-cal-title{font-weight:800}
+.dh-cal .dh-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dh-cal .dh-cell{height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #334155;border-radius:10px;font-size:18px;color:#e5e7eb}
+.dh-cal .dh-cell.muted{color:#64748b}
+.dh-cal .dh-cell.sel{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:800}
+.dh-cal .dh-dow{font-size:12px;color:#94a3b8;text-align:center;margin-bottom:4px}
+@media print {
+  body *{visibility:hidden !important;}
+  #dh_print_area, #dh_print_area *{visibility:visible !important;}
+  #dh_print_area{position:fixed;left:0;top:0;right:0;padding:20px;background:#fff;color:#000;}
+  table{width:100%;border-collapse:collapse;font:14px system-ui,-apple-system,Segoe UI,Roboto;}
+  th,td{border:1px solid #999;padding:6px 8px;text-align:left;} th{font-weight:700;}
+}
+</style>
+<script>
+(function(){
+  function $(sel,root){ return (root||document).querySelector(sel); }
+  function $all(sel,root){ return Array.from((root||document).querySelectorAll(sel)); }
+  function text(el){ return (el && (el.value||el.textContent||"")).toString().trim(); }
+  function esc(s){ return String(s||"").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]||m)); }
+  function toast(msg){ try{ const t=document.createElement('div'); t.textContent=msg; t.style.cssText="position:fixed;left:50%;top:20px;transform:translateX(-50%);background:#111827;color:#fff;padding:8px 12px;border-radius:10px;border:1px solid #374151;z-index:999999;font:600 13px system-ui,-apple-system;"; document.body.appendChild(t); setTimeout(()=>t.remove(),1800);}catch(e){alert(msg);} }
+  function getJobId(){ const ids=['jobId','jobID','lblJobId','lblJobID','currentJobId','selectedJobId']; for(const id of ids){ const el=document.getElementById(id); if(el&&text(el)) return text(el).replace(/^Job\s*#\s*/i,''); } let c=$all('*').map(n=>n.textContent||'').find(t=>/Job\s*#\s*[A-Z]*-?\d{3,,}/i.test(t)); if(c){ const m=c.match(/Job\s*#\s*([A-Z]*-?\d{3,})/i); if(m) return m[1]; } return ''; }
+  function getCurrentDriverId(){ const el=$('#lblEmpId')||$('#driverId')||$('#currentDriver')||$('#lblDriver'); return (el?text(el):'DEMO').trim(); }
+  function getField(ids){ for(const id of ids){ const el=document.getElementById(id); if(el&&text(el)) return text(el); } return ''; }
+  function getJobContext(){ return { job:getJobId(), from:getField(['f_from','fromVal','from','lblFrom']), to:getField(['f_loadin','toVal','to','lblTo']), container:getField(['f_container','container','containerNo','lblContainer']), loadEmpty:getField(['f_appt','loadEmpty','loadStatus','lblLoadEmpty']), driverId:getCurrentDriverId() }; }
+  const STORAGE_KEY='driver_history';
+  function saveHistoryRecord(rec){ try{ const arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); arr.push(rec); localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }catch(e){} }
+  function readHistory(dateStr, driverId){ try{ const arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); return arr.filter(r=>r.driverId===driverId && r.date===dateStr); }catch(e){ return []; } }
+  (function seed(){
+    try{
+      const arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+      if(arr.length>0) return;
+      const me=getCurrentDriverId();
+      const today=new Date();
+      const d0=today.toISOString().slice(0,10);
+      const d1=new Date(today.getTime()-86400000).toISOString().slice(0,10);
+      const sample=[
+        {date:d0,driverId:me,job:'CCL-5009',from:'Port of Long Beach',to:'Yusen Logistics (Torrance)',container:'MSCU1234567',loadEmpty:'Load'},
+        {date:d0,driverId:me,job:'CCL-5010',from:'SSA Terminal',to:'Amazon LGB3',container:'CMAU7654321',loadEmpty:'Empty'},
+        {date:d1,driverId:me,job:'CCL-5007',from:'Pier E',to:'Target RDC',container:'OOLU1122334',loadEmpty:'Load'},
+        {date:d1,driverId:me,job:'CCL-5008',from:'LBCT',to:'Walmart DC',container:'TRHU9988776',loadEmpty:'Empty'}
+      ];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sample));
+    }catch(e){}
+  })();
+
+  window.__saveDriverHistory=function(){ const ctx=getJobContext(); const today=new Date().toISOString().slice(0,10); const rec={date:today,driverId:ctx.driverId,job:ctx.job,from:ctx.from,to:ctx.to,container:ctx.container,loadEmpty:ctx.loadEmpty}; if(!rec.job){ toast('No job selected'); return false; } saveHistoryRecord(rec); return true; };
+  window.addEventListener('job:completed', function(){ window.__saveDriverHistory(); });
+  document.addEventListener('click', function(ev){ const el=ev.target.closest?ev.target.closest('.menu-item'):null; const label=(ev.target&&(ev.target.innerText||'')).trim().toLowerCase(); if(el && (el.dataset.action==='complete' || label==='complete')){ setTimeout(()=>window.__saveDriverHistory(), 500); } }, true);
+
+  function addHistoryMenuItemIfNeeded(){
+    const sheet=document.getElementById('menuSheet') || document.querySelector('.hamburger-menu, .menu-sheet'); if(!sheet) return;
+    const list=sheet.querySelector('ul, .list, .menu-list, nav, .sheet-body') || sheet; if(!list) return;
+    if(list.querySelector('[data-action="history"]')) return;
+    const item=document.createElement('div');
+    item.className=(list.querySelector('.menu-item')?'menu-item':'dh-menu-item');
+    item.textContent='Driver History'; item.dataset.action='history';
+    const children=Array.from(list.children);
+    const findByText=txt=>children.find(c=> (c.innerText||'').trim().toLowerCase()===txt);
+    const breakDown=findByText('break down'); const endTrip=findByText('end trip');
+    if(breakDown && breakDown.nextSibling){ list.insertBefore(item, breakDown.nextSibling); }
+    else if(endTrip){ list.insertBefore(item, endTrip); } else { list.appendChild(item); }
+  }
+  const mo=new MutationObserver(()=>addHistoryMenuItemIfNeeded());
+  mo.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['class','hidden','style']});
+  document.addEventListener('DOMContentLoaded', addHistoryMenuItemIfNeeded);
+
+  function fmt(y,m,d){ const mm=('0'+(m+1)).slice(-2), dd=('0'+d).slice(-2); return y+'-'+mm+'-'+dd; }
+  function monthName(i){ return new Date(2000,i,1).toLocaleString(undefined,{month:'short'}); }
+  function buildCalendar(container, value){
+    container.innerHTML='';
+    const sel = value ? new Date(value) : new Date();
+    const state = { y: sel.getFullYear(), m: sel.getMonth(), d: sel.getDate() };
+
+    const head = document.createElement('div');
+    head.className='dh-cal-head';
+    head.innerHTML = '<button data-nav="-1">◀</button>'
+                   + '<div class="dh-cal-title"></div>'
+                   + '<button data-nav="1">▶</button>';
+    container.appendChild(head);
+
+    const dowWrap=document.createElement('div'); dowWrap.className='dh-grid';
+    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(s=>{ const el=document.createElement('div'); el.className='dh-dow'; el.textContent=s; dowWrap.appendChild(el); });
+    container.appendChild(dowWrap);
+
+    const grid = document.createElement('div'); grid.className='dh-grid'; container.appendChild(grid);
+
+    function render(){
+      $('.dh-cal-title',container).textContent = monthName(state.m)+' '+state.y;
+      grid.innerHTML='';
+      const first=new Date(state.y,state.m,1);
+      const startDay=first.getDay();
+      const daysInMonth=new Date(state.y,state.m+1,0).getDate();
+      const prevDays=new Date(state.y,state.m,0).getDate();
+
+      for(let i=startDay-1;i>=0;i--){ const d=prevDays - i; const cell=document.createElement('div'); cell.className='dh-cell muted'; cell.textContent=d; grid.appendChild(cell); }
+      for(let d=1; d<=daysInMonth; d++){ const cell=document.createElement('div'); cell.className='dh-cell'; cell.textContent=d; if(d===state.d) cell.classList.add('sel'); cell.addEventListener('click', ()=>{ state.d=d; select(); }); grid.appendChild(cell); }
+      const cellsNeeded = 42 - grid.children.length;
+      for(let i=1;i<=cellsNeeded;i++){ const cell=document.createElement('div'); cell.className='dh-cell muted'; cell.textContent=i; grid.appendChild(cell); }
+    }
+    function nav(dir){ state.m += dir; if(state.m<0){ state.m=11; state.y--; } if(state.m>11){ state.m=0; state.y++; } state.d=1; render(); }
+    function select(){ const dateStr = fmt(state.y,state.m,state.d); container.dispatchEvent(new CustomEvent('date:selected',{detail:{date:dateStr}})); $all('.dh-cell',container).forEach(c=>c.classList.remove('sel')); const idx = Array.from(grid.children).findIndex(c=>!c.classList.contains('muted') && c.textContent==state.d); if(idx>=0) grid.children[idx].classList.add('sel'); }
+    head.addEventListener('click', (e)=>{ const b=e.target.closest('button'); if(!b) return; nav(parseInt(b.dataset.nav||'0',10)); });
+    render(); setTimeout(select,0);
+  }
+
+  function ensureModal(){
+    let m=document.getElementById('drvHistModal'); if(m) return m;
+    m=document.createElement('div'); m.id='drvHistModal'; m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:100003;';
+    m.innerHTML='<div class="dh-card">'
+      + '<div class="dh-row"><h3>Driver History</h3><button id="dh_close">Close</button></div>'
+      + '<label>Select date</label>'
+      + '<div id="dh_calendar" class="dh-cal"></div>'
+      + '<div id="dh_table_wrap"></div>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;"><button id="dh_export">Export PDF</button></div>'
+      + '</div>';
+    document.body.appendChild(m);
+    return m;
+  }
+
+  function renderTable(rows){
+    const wrap=$('#dh_table_wrap');
+    if(!rows.length){ wrap.innerHTML='<div style="padding:10px;color:#94a3b8">No records for this date.</div>'; return; }
+    let html='<div id="dh_print_area"><table><thead><tr><th>Job #</th><th>From</th><th>To</th><th>Container #</th><th>Load / Empty</th></tr></thead><tbody>';
+    for(const r of rows){ html+='<tr><td>Job # '+esc(r.job)+'</td><td>'+esc(r.from)+'</td><td>'+esc(r.to)+'</td><td>'+esc(r.container)+'</td><td>'+esc(r.loadEmpty)+'</td></tr>'; }
+    html+='</tbody></table></div>'; wrap.innerHTML=html;
+  }
+
+  function openHistory(){
+    const m=ensureModal(); const cal=$('#dh_calendar',m); const today=new Date().toISOString().slice(0,10);
+    buildCalendar(cal, today);
+    function refresh(dateStr){ renderTable(readHistory(dateStr, getCurrentDriverId())); }
+    cal.addEventListener('date:selected', e=> refresh(e.detail.date));
+    refresh(today);
+    $('#dh_export',m).onclick=function(){ const area=document.getElementById('dh_print_area'); if(!area){ alert('Nothing to export'); return; } document.body.appendChild(area); window.print(); $('#dh_table_wrap').appendChild(area); };
+    $('#dh_close',m).onclick=function(){ m.remove(); closeMenu(); };
+  }
+  function closeMenu(){ const sheet=document.getElementById('menuSheet')||document.querySelector('.hamburger-menu, .menu-sheet'); if(!sheet) return; sheet.classList.remove('show'); sheet.setAttribute('hidden','hidden'); }
+
+  document.addEventListener('click', function(e){ const item=e.target.closest && e.target.closest('[data-action="history"], .dh-menu-item'); if(!item) return; e.preventDefault(); e.stopPropagation(); openHistory(); }, true);
+})();
+</script>
+
+<script>
+(function(){
+  function fmtMonth(date){
+    return date.toLocaleString(undefined,{month:"short", year:"numeric"}).replace('.', '');
+  }
+  function startOfMonth(date){ return new Date(date.getFullYear(), date.getMonth(), 1); }
+  function endOfMonth(date){ return new Date(date.getFullYear(), date.getMonth()+1, 0); }
+  function addMonths(date, n){ return new Date(date.getFullYear(), date.getMonth()+n, 1); }
+  function buildGrid(date){
+    const first = startOfMonth(date);
+    const last  = endOfMonth(date);
+    const startOffset = first.getDay(); // 0=Sun..6=Sat
+    const totalDays = last.getDate();
+    const prevLast = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
+
+    const cells = [];
+    // prev-month tail
+    for(let i=startOffset-1;i>=0;i--){ cells.push({d: prevLast - i, muted:true, prev:true}); }
+    // this month
+    for(let d=1; d<=totalDays; d++){ cells.push({d, muted:false}); }
+    // next-month head
+    while(cells.length % 7 !== 0) { cells.push({d: cells.length % 7 + 1, muted:true, next:true}); }
+    // ensure 6 rows (42 cells)
+    while(cells.length < 42) { cells.push({d: cells.length % 31 + 1, muted:true, next:true}); }
+    return cells;
+  }
+  function jobCountFor(y,m,d){
+    // Saturday => 0, weekdays => demo 1..4 cycling
+    const dt = new Date(y,m,d);
+    const dow = dt.getDay();
+    if (dow === 6) return 0;
+    return (d % 4) + 1;
+  }
+  function render(root){
+    if (!root) return;
+    let card = root.querySelector('.tpl-cal-card');
+    if (!card){
+      card = document.createElement('div');
+      card.className = 'tpl-cal-card';
+      card.innerHTML = '<div class="tpl-head">'+
+        '<div class="tpl-nav"><button class="tpl-btn" data-nav="-1">◀</button></div>'+
+        '<div class="tpl-month"></div>'+
+        '<div class="tpl-nav"><button class="tpl-btn" data-nav="1">▶</button></div>'+
+        '</div>'+
+        '<div class="tpl-grid">'+
+          '<div class="tpl-dow"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>'+
+          '<div class="tpl-days"></div>'+
+        '</div>'+
+        '<div class="tpl-footer"><button class="tpl-export" id="drvHistExport">Export PDF</button></div>'+
+        '<div class="jobs-pill">Job # - 0</div>';
+      root.appendChild(card);
+    }
+    let state = root.__tpl_date || new Date();
+    function update(){
+      const monthEl = card.querySelector('.tpl-month');
+      const daysEl  = card.querySelector('.tpl-days');
+      monthEl.textContent = state.toLocaleString(undefined, {month:"short", year:"numeric"});
+      const cells = buildGrid(state);
+      daysEl.innerHTML = '';
+      cells.forEach(c=>{
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tpl-day' + (c.muted ? ' muted':'') ;
+        b.textContent = c.d;
+        b.addEventListener('click', ()=>{
+          daysEl.querySelectorAll('.tpl-day').forEach(x=>x.classList.remove('active'));
+          b.classList.add('active');
+          const count = jobCountFor(state.getFullYear(), state.getMonth(), parseInt(b.textContent, 10));
+          const pill = card.querySelector('.jobs-pill'); pill.textContent = 'Job # - ' + count;
+        });
+        daysEl.appendChild(b);
+      });
+    }
+    card.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.tpl-btn');
+      if(!btn) return;
+      const delta = parseInt(btn.dataset.nav, 10) || 0;
+      root.__tpl_date = addMonths(root.__tpl_date || new Date(), delta);
+      state = root.__tpl_date;
+      update();
+    });
+    update();
+  }
+  const obs = new MutationObserver(function(list){
+    list.forEach(m=>{
+      (m.addedNodes||[]).forEach(n=>{
+        if(n.id === 'drvHistModal') render(n);
+      });
+    });
+  });
+  try{ obs.observe(document.body, {childList:true, subtree:true}); }catch(_){}
+  // In case modal already exists
+  const now = document.getElementById('drvHistModal'); if (now) render(now);
+})();
+</script>
+
+
+<style>
+#drvHistModal { align-items:center; justify-content:center; }
+#drvHistModal .tpl-cal-card { position:relative; width:92vw; max-width:520px;
+  background:#0b1220; color:#dbeafe; border:1px solid #334155; border-radius:16px;
+  box-shadow:0 22px 60px rgba(0,0,0,.45); padding:16px; transform:scale(0.74); transform-origin:center; }
+#drvHistModal .tpl-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+#drvHistModal .tpl-month{font-weight:800; font-size:20px; color:#e5e7eb;}
+#drvHistModal .tpl-btn{width:36px; height:36px; display:flex; align-items:center; justify-content:center;
+  border-radius:12px; border:1px solid #334155; background:#111827; color:#e5e7eb;}
+#drvHistModal .tpl-grid{border:1px solid #334155; border-radius:12px; padding:12px; background:#0f172a;}
+#drvHistModal .tpl-dow{display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:10px;
+  color:#94a3b8; font-weight:600; font-size:13px; text-align:center;}
+#drvHistModal .tpl-days{display:grid; grid-template-columns:repeat(7,1fr); gap:10px;}
+#drvHistModal .tpl-day{height:48px; display:flex; align-items:center; justify-content:center;
+  border-radius:12px; border:1px solid #334155; background:transparent; font-weight:700; font-size:18px; color:#e5e7eb;}
+#drvHistModal .tpl-day.muted{opacity:.35;}
+#drvHistModal .tpl-day.active{background:#2563eb; color:#fff; border-color:#2563eb;}
+#drvHistModal .tpl-footer{margin-top:12px; display:flex; justify-content:flex-end;}
+#drvHistModal .tpl-export{background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:0; border-radius:12px; padding:10px 14px; font-weight:800;}
+#drvHistModal .jobs-pill{position:absolute; left:16px; bottom:14px; background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:#fff; border:1px solid rgba(147,197,253,.6); padding:8px 12px; font-weight:800; font-size:14px; border-radius:999px; box-shadow:0 8px 20px rgba(0,0,0,.35); pointer-events:none;}
+/* Hide any legacy content inside modal, just in case */
+#drvHistModal .dh-cal, #drvHistModal #dh_table_wrap, #drvHistModal .dh-list, #drvHistModal .calendar, #drvHistModal .dh-extra { display:none !important; }
+</style>
+
+<script>
+(function(){
+  // Build single calendar card markup
+  function calendarCardHTML(){
+    return ''+
+    '<div class="tpl-cal-card">' +
+      '<div class="tpl-head">' +
+        '<button class="tpl-btn" data-nav="-1" aria-label="Previous Month">◀</button>' +
+        '<div class="tpl-month">Sep 2025</div>' +
+        '<button class="tpl-btn" data-nav="1" aria-label="Next Month">▶</button>' +
+      '</div>' +
+      '<div class="tpl-grid">' +
+        '<div class="tpl-dow"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>' +
+        '<div class="tpl-days"></div>' +
+      '</div>' +
+      '<div class="tpl-footer"><button class="tpl-export">Export PDF</button></div>' +
+      '<div class="jobs-pill">Job # - 0</div>' +
+    '</div>';
+  }
+
+  function ensureSingleCalendar(modal){
+    if (!modal) return;
+    // Wipe any previous/legacy markup inside Driver History modal
+    modal.innerHTML = calendarCardHTML();
+    modal.classList.add('tpl-mounted'); // flag
+  }
+
+  function startCalendar(modal){
+    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+    function addMonths(d, n){ return new Date(d.getFullYear(), d.getMonth()+n, 1); }
+    function buildGrid(date){
+      const first = new Date(date.getFullYear(), date.getMonth(), 1);
+      const last  = endOfMonth(date);
+      const startOffset = first.getDay(); // 0=Sun..6=Sat
+      const totalDays = last.getDate();
+      const prevLast = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
+      const cells = [];
+      for(let i=startOffset-1;i>=0;i--){ cells.push({d: prevLast - i, muted:true}); }
+      for(let d=1; d<=totalDays; d++){ cells.push({d}); }
+      while(cells.length % 7 !== 0) { cells.push({d: cells.length % 31 + 1, muted:true}); }
+      while(cells.length < 42) { cells.push({d: cells.length % 31 + 1, muted:true}); }
+      return cells;
+    }
+    function jobCountFor(y,m,d){
+      const dow = new Date(y,m,d).getDay();
+      if (dow === 6) return 0; // Saturday rule
+      return (d % 4) + 1;      // demo logic until wired to Firestore
+    }
+
+    const card = modal.querySelector('.tpl-cal-card');
+    const monthEl = card.querySelector('.tpl-month');
+    const daysEl  = card.querySelector('.tpl-days');
+    let state = new Date();
+
+    function render(){
+      monthEl.textContent = state.toLocaleString(undefined, {month:"short", year:"numeric"});
+      const cells = buildGrid(state);
+      daysEl.innerHTML = '';
+      cells.forEach(c=>{
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tpl-day' + (c.muted ? ' muted':'');
+        b.textContent = c.d;
+        b.addEventListener('click', ()=>{
+          daysEl.querySelectorAll('.tpl-day').forEach(x=>x.classList.remove('active'));
+          b.classList.add('active');
+          const count = jobCountFor(state.getFullYear(), state.getMonth(), parseInt(b.textContent,10));
+          card.querySelector('.jobs-pill').textContent = 'Job # - ' + count;
+        });
+        daysEl.appendChild(b);
+      });
+    }
+
+    card.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.tpl-btn');
+      if(!btn) return;
+      const delta = parseInt(btn.dataset.nav,10) || 0;
+      state = addMonths(state, delta);
+      render();
+    });
+
+    render();
+  }
+
+  const obs = new MutationObserver(function(list){
+    list.forEach(m=>{
+      (m.addedNodes||[]).forEach(n=>{
+        if (n.id === 'drvHistModal' && !n.classList.contains('tpl-mounted')){
+          // Center modal container
+          n.style.display = 'flex';
+          n.style.alignItems = 'center';
+          n.style.justifyContent = 'center';
+          ensureSingleCalendar(n);
+          startCalendar(n);
+        }
+      });
+    });
+  });
+  try { obs.observe(document.body, {childList:true, subtree:true}); } catch(e){}
+
+  // In case modal is already present
+  const existing = document.getElementById('drvHistModal');
+  if (existing && !existing.classList.contains('tpl-mounted')){
+    existing.style.display = 'flex';
+    existing.style.alignItems = 'center';
+    existing.style.justifyContent = 'center';
+    ensureSingleCalendar(existing);
+    startCalendar(existing);
+  }
+})();
+</script>
+
+
+<!-- jsPDF & html2canvas for client-side PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-V9A2sL7u3Hh2j5w3Wk9Cqg8d7GmYx1mY9pUo7wJY2rHh/1H0Mfe0U8FQ8E1w8e1WZThS6H6JH2I8nq9Qm0l3rA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNa5CWd2zS8L9X3r8nO4sJr5Y0M1B0d1h7lS2d7d3Q3Z9bY1bE0qf3m9o6x0v6Y0sM9wC1j5b3oOQyI1aN2POg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+// === Driver History: Export PDF (downloads immediately) ===
+(function(){
+  function qs(sel, root){ return (root||document).querySelector(sel); }
+  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+  function text(el){ return (el && (el.textContent || el.value) || '').trim(); }
+  function getSelectedDate(){
+    // 1) Preferred: data-selected-date inside Driver History modal
+    var el = qs('#drvHistModal [data-selected-date]');
+    if (el && text(el)) return text(el);
+    // 2) Read active day + month header
+    var active = qs('#drvHistModal .tpl-day.active');
+    var mon = qs('#drvHistModal .tpl-month');
+    if (active && mon){
+      var d = text(active);
+      var m = text(mon);
+      return m + ' ' + d;
+    }
+    // 3) Fallback to today ISO
+    try {
+      var dt = new Date();
+      var y = dt.getFullYear(), m2 = String(dt.getMonth()+1).padStart(2,'0'), d2 = String(dt.getDate()).padStart(2,'0');
+      return y + '-' + m2 + '-' + d2;
+    } catch(e) { return 'Date'; }
+  }
+  function getEmployee(){
+    var name = text(qs('#lblEmpName')) || 'Employee';
+    var id   = text(qs('#lblEmpId')) || '';
+    return { name, id };
+  }
+  function getRowsForDate(selDate){
+    // Try reading a hidden driver-history table if present
+    var rows = [];
+    var wrap = qs('#dh_table_wrap') || qs('#drvHistModal .dh-list') || null;
+    if (wrap){
+      var tr = qsa('tr', wrap).filter(function(r){
+        return qsa('td, th', r).length >= 5;
+      });
+      tr.forEach(function(r){
+        var cells = qsa('td, th', r).map(function(c){ return text(c); });
+        // Heuristic: find date in first 1-2 cells; if matches selected date substring, keep
+        var rdate = (cells[0] || '') + ' ' + (cells[1] || '');
+        if (!selDate || rdate.includes(selDate)){
+          rows.push({
+            date: cells[0] || '',
+            job:  cells[1] || '',
+            from: cells[2] || '',
+            to:   cells[3] || '',
+            container: cells[4] || '',
+            load: cells[5] || '',
+            empty: cells[6] || ''
+          });
+        }
+      });
+      if (rows.length) return rows;
+    }
+    // Fallback: use current assignment card as a single row
+    var jobOpt = qs('#assignmentSelect option:checked');
+    var jobNum = (text(jobOpt).match(/Job\s*#\s*(.+)/)||[])[1] || '';
+    return [{
+      date: selDate || '',
+      job: jobNum,
+      from: text(qs('#f_from')),
+      to: text(qs('#f_loadin')),
+      container: text(qs('#f_container')),
+      load: (function(){ var v=text(qs('#f_appt')); return /load/i.test(v)?'Load':''; })(),
+      empty: (function(){ var v=text(qs('#f_appt')); return /empty/i.test(v)?'Empty':''; })()
+    }];
+  }
+  window.makePdf = function(){
+    var selDate = getSelectedDate();
+    var emp = getEmployee();
+    var rows = getRowsForDate(selDate);
+    // Build PDF using jsPDF
+    const { jsPDF } = window.jspdf || {};
+    if (!jsPDF){ alert('PDF library failed to load.'); return; }
+    var doc = new jsPDF({ orientation:'portrait', unit:'pt', format:'letter' }); // 612x792pt
+    var x=56, y=64;
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    var headerLeft = emp.name + (emp.id ? ' ('+emp.id+')' : '');
+    doc.text(headerLeft, x, y);
+    var headerRight = String(selDate || '');
+    var pageW = doc.internal.pageSize.getWidth();
+    doc.text(headerRight, pageW - 56, y, { align:'right' });
+    y += 18;
+    // Table headers (exact order requested)
+    var cols = ['DATE','JOB #','FROM','TO','CONTAINER #','LOAD','EMPTY'];
+    var colW = [72, 70, 140, 140, 110, 50, 60];
+    doc.setFontSize(10);
+    // Header row bg
+    doc.setDrawColor(30); doc.setFillColor(240); // neutral
+    // Manually draw header background rect
+    var hdrH = 22;
+    var curX = x; 
+    for (var i=0;i<cols.length;i++){ 
+      doc.rect(curX, y+4, colW[i], hdrH, 'S'); 
+      curX += colW[i]; 
+    }
+    // Header text
+    doc.setFont('helvetica','bold');
+    var tx = x + 4, ty = y + 20;
+    cols.forEach(function(c, i){
+      doc.text(c, tx, ty);
+      tx += colW[i];
+    });
+    y += hdrH + 10;
+    // Rows
+    doc.setFont('helvetica','normal');
+    var rowH = 18;
+    rows.forEach(function(r){
+      var cells = [r.date || '', r.job || '', r.from || '', r.to || '', r.container || '', r.load || '', r.empty || ''];
+      var cx = x + 4;
+      // draw row boxes
+      var bx = x, by = y - 12;
+      var cxx = x;
+      for (var k=0;k<colW.length;k++){ doc.rect(cxx, by, colW[k], rowH+8); cxx += colW[k]; }
+      // text
+      cells.forEach(function(val, i){
+        doc.text(String(val), cx, y);
+        cx += colW[i];
+      });
+      y += rowH + 10;
+      // new page if near bottom
+      if (y > (792 - 56)){ doc.addPage(); y = 64; }
+    });
+    window.makePdf = makePdf;
+    window.makePdf = makePdf;
+    // Save
+    var safeName = (emp.name || 'Employee').replace(/[^a-z0-9]+/gi,'_');
+    var file = 'DriverHistory_' + (selDate || 'Date') + '_' + (emp.id || 'ID') + '.pdf';
+    doc.save(file);
+  }
+  function wire(){
+    // Attach to common IDs/classes
+    var btn = document.getElementById('dh_export_pdf') 
+           || document.getElementById('exportPdfBtn') 
+           || document.querySelector('.tpl-export');
+    if (!btn) return;
+    btn.addEventListener('click', function(e){
+      e.preventDefault(); e.stopPropagation();
+      makePdf();
+    }, { passive:false });
+  }
+  if (document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', wire, {once:true}); }
+  else { wire(); }
+})();
+</script>
+
+
+<script>
+// Delegated click so Export PDF works even if the button is injected later
+(function(){
+  function isExportButton(el){
+    if(!el) return false;
+    if (el.matches && (el.matches('.tpl-export') || el.matches('#dh_export_pdf') || el.matches('#exportPdfBtn'))) return true;
+    return false;
+  }
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest && e.target.closest('.tpl-export, #dh_export_pdf, #exportPdfBtn');
+    if (!btn) return;
+    e.preventDefault(); e.stopPropagation();
+    if (window.makePdf) { try { window.makePdf(); } catch(_){} return; }
+    // If makePdf is encapsulated, try to locate the function we injected
+    try {
+      var maker = (function(){
+        for (var k in window){
+          if (/^makePdf$/.test(k) && typeof window[k]==='function') return window[k];
+        }
+        return null;
+      })();
+      if (maker) maker();
+    } catch(_){}
+  }, true);
+})();
+</script>
+
+
+<script>
+// --- Robust Export PDF wiring & library loader ---
+(function(){
+  function toast(msg){
+    try{
+      var t=document.createElement('div');
+      t.textContent=msg;
+      t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:#0f172a;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:100000;font:14px system-ui,-apple-system,Segoe UI,Roboto';
+      document.body.appendChild(t); setTimeout(function(){t.remove();},1800);
+    }catch(e){}
+  }
+
+  function loadScript(src){
+    return new Promise(function(res, rej){
+      var s=document.createElement('script'); s.src=src; s.async=true; 
+      s.onload=res; s.onerror=function(){ rej(new Error('Failed to load '+src)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  async function ensureLibs(){
+    if (!window.jspdf || !window.jspdf.jsPDF){
+      try{ await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'); }
+      catch(e){ toast('PDF library failed to load'); throw e; }
+    }
+    if (!window.html2canvas){
+      try{ await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'); }
+      catch(e){ /* not strictly required for table PDF */ }
+    }
+  }
+
+  // Expose a single entry we can call from anywhere
+  window.__exportDriverHistoryPdf = async function(){
+    try{
+      await ensureLibs();
+      if (window.makePdf) { window.makePdf(); return; }
+      // Try to find a nearby function named makePdf inside scripts (closure)
+      try{ if (typeof makePdf==='function'){ makePdf(); return; } }catch(_){}
+      toast('Export function not found');
+    }catch(e){
+      console.warn(e);
+    }
+  };
+
+  // Delegated click: works even if button appears later
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest && e.target.closest('.tpl-export, #dh_export_pdf, #exportPdfBtn');
+    if (!btn) return;
+    e.preventDefault(); e.stopPropagation();
+    window.__exportDriverHistoryPdf();
+  }, true);
+
+  // Also bind by button text as a fallback ("Export PDF")
+  document.addEventListener('click', function(e){
+    var el = e.target;
+    if (!el) return;
+    if (/export\s*pdf/i.test(el.textContent||'')){
+      if (el.closest('#drvHistModal')){
+        e.preventDefault(); e.stopPropagation();
+        window.__exportDriverHistoryPdf();
+      }
+    }
+  }, true);
+})();
+</script>
+
+
+<script>
+// Force expose makePdf globally if defined in closure
+try {
+  if (typeof makePdf === 'function') {
+    window.makePdf = makePdf;
+  }
+} catch(e) {}
+</script>
+
+
+<script id="drvHistExportEnhance">
+(function(){
+  function byId(id){ return document.getElementById(id); }
+  function text(el){ return (el && (el.textContent||'').trim()) || ''; }
+
+  function enhanceCalendar(){
+    var modal = byId('drvHistModal');
+    if(!modal) return;
+    var days = modal.querySelectorAll('.tpl-day');
+    days.forEach(function(d){
+      d.addEventListener('click', function(){
+        days.forEach(function(x){ x.classList.remove('active'); });
+        d.classList.add('active');
+        // store selected day number
+        modal.setAttribute('data-selected-day', text(d));
+      });
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', enhanceCalendar, {once:true});
+  } else {
+    enhanceCalendar();
+  }
+})();
+</script>
+
+
+
+<script id="drvHistExportHandler">
+(function(){
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+  function fmtDate(monthLabel, dayStr){
+    try{
+      if(!monthLabel) return '';
+      const [mon, year] = monthLabel.split(/\s+/);
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const monthIdx = months.indexOf(mon);
+      const d = new Date(parseInt(year,10), monthIdx >= 0 ? monthIdx : 0, parseInt(dayStr||'1',10));
+      const opt = { month: 'short', day: '2-digit', year: 'numeric' };
+      return d.toLocaleDateString('en-US', opt).replace(',', '');
+    }catch(e){ return (monthLabel + (dayStr ? ' ' + dayStr : '')); }
+  }
+
+  function parseSelectedDate(){
+    const modal = $('#drvHistModal');
+    const monthLabel = $('.tpl-month', modal) ? $('.tpl-month', modal).textContent.trim() : '';
+    let day = (modal && modal.getAttribute('data-selected-day')) || '';
+    if(!day){
+      const active = $('.tpl-day.active', modal);
+      if(active) day = active.textContent.trim();
+    }
+    return fmtDate(monthLabel, day);
+  }
+
+  function collectRow(){
+    const sel = $('#assignmentSelect');
+    let job = '';
+    if(sel){
+      const opt = sel.options[sel.selectedIndex];
+      if(opt) job = (opt.textContent||'').replace(/.*?(CCL-\d+)/,'$1');
+    }
+    const from = ($('#f_from')||{}).textContent || '—';
+    const to = ($('#f_loadin')||{}).textContent || '—';
+    const container = ($('#f_container')||{}).textContent || '—';
+    const load = ($('#f_appt')||{}).textContent || '—';
+    return { job: (job||'').trim(), from: from.trim(), to: to.trim(), container: container.trim(), load: load.trim() };
+  }
+
+  function exportDriverHistoryPDF(){
+    const dateTxt = parseSelectedDate() || 'Selected Date';
+    const row  = collectRow();
+    const id   = ($('#lblEmpId')||{}).textContent || '';
+    const name = ($('#assignHeader')||{}).textContent || 'Prime Tech Solutions';
+
+    const { jsPDF } = window.jspdf || {};
+    if (!jsPDF || !window.jspdf || !('autoTable' in (jsPDF.API||{}))) {
+      alert('PDF engine not loaded');
+      return;
+    }
+
+    // US Letter Landscape
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+
+    // Header
+    const pageW = doc.internal.pageSize.getWidth();
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(16);
+    doc.text(`${name} (${id})`, 40, 48, { baseline: 'top' });
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(12);
+    const dateWidth = doc.getTextWidth(dateTxt);
+    doc.text(dateTxt, pageW - 40 - dateWidth, 48, { baseline: 'top' });
+
+    // Table
+    const head = [["DATE","JOB #","FROM","TO","CONTAINER #","LOAD / EMPTY"]];
+    const body = [[dateTxt, row.job, row.from, row.to, row.container, row.load]];
+
+    doc.autoTable({
+      startY: 80,
+      head: head,
+      body: body,
+      theme: 'grid',
+      styles: { font: 'helvetica', fontSize: 10, cellPadding: 6, lineColor: [120,120,120], lineWidth: 0.2, halign: 'center', valign: 'middle' },
+      headStyles: { fillColor: [31,41,55], textColor: 255, fontStyle: 'bold', halign: 'center', lineColor: [120,120,120], lineWidth: 0.2 },
+      bodyStyles: { textColor: [20,20,20], lineColor: [120,120,120], lineWidth: 0.2 },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 110 },
+        1: { halign: 'center', cellWidth: 90 },
+        2: { halign: 'left',   cellWidth: 220 },
+        3: { halign: 'left',   cellWidth: 260 },
+        4: { halign: 'center', cellWidth: 120 },
+        5: { halign: 'center', cellWidth: 110 }
+      },
+      didParseCell: function(data){
+        if (data.section === 'head'){
+          data.cell.styles.lineWidthBottom = 0; // avoid double line at header/body boundary
+        }
+        if (data.section === 'body' && data.row.index === 0){
+          data.cell.styles.lineWidthTop = 0.2;  // single separator line
+        }
+      },
+      tableLineColor: [120,120,120],
+      tableLineWidth: 0.2,
+      margin: { top: 60, right: 40, bottom: 40, left: 40 }
+    });
+
+    doc.save(`DriverHistory_${dateTxt.replace(/\s+/g,'_')}.pdf`);
+  }
+
+  function wire(){
+    const btn = document.getElementById('drvHistExport') || Array.from(document.querySelectorAll('#drvHistModal button')).find(b => (b.textContent||'').trim().toLowerCase().includes('export pdf'));
+    if(btn && !btn.__wired){
+      btn.__wired = true;
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        exportDriverHistoryPDF();
+      });
+    }
+  }
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', wire, {once:true}); } else { wire(); }
+})();
+</script>
+
+
 </body>
 </html>
