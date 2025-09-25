@@ -926,7 +926,8 @@ document.addEventListener('keydown', function(ev){
         if(action==='complete') return handleComplete();
         if(action==='photo') return handlePhoto();
         if(action==='yard') return handleYardMove();
-        if(action==='breakdown') return handleBreakdown();
+        \1
+        if(action==='history') return (typeof openHistory==='function' ? openHistory() : undefined);
       }
 
       // Delegate clicks INSIDE overlay only
@@ -2940,29 +2941,40 @@ try {
 </script>
 
 
-</body>
-</html>
 
-<!-- history mobile tap fix -->
+<!-- driver-history unified router + iOS tap fix -->
 <script>
 (function(){
   try{
-    if (window.__historyMobileFix) return;
-    window.__historyMobileFix = true;
-    function triggerHistory(e){
-      var t = e.target && (e.target.closest ? e.target.closest('[data-action="history"]') : null);
-      if(!t) return;
-      e.preventDefault(); e.stopPropagation();
-      try{ if(typeof openHistory==='function'){ openHistory(); } }catch(_){}
+    if (window.__dhUnifiedFix) return;
+    window.__dhUnifiedFix = true;
+    function bindHistoryHandler(){
+      var sheet = document.getElementById('menuSheet') || document.querySelector('.hamburger-menu, .menu-sheet');
+      if(!sheet) return;
+      if (sheet.__dhBound) return;
+      sheet.__dhBound = true;
+      var handler = function(e){
+        var t = e.target && (e.target.closest ? e.target.closest('[data-action="history"]') : null);
+        if(!t) return;
+        e.preventDefault(); e.stopPropagation();
+        try{ if(typeof openHistory==='function') openHistory(); }catch(_){}
+      };
+      sheet.addEventListener('pointerup', handler, true);
+      sheet.addEventListener('click',     handler, true);
+      sheet.addEventListener('touchend',  handler, true);
     }
-    document.addEventListener('pointerup', triggerHistory, true);
-    document.addEventListener('touchend', triggerHistory, true);
-    document.addEventListener('click', triggerHistory, true);
-    (document.querySelectorAll('[data-action="history"]') || []).forEach(function(it){
-      it.setAttribute('role','button');
-      it.setAttribute('tabindex','0');
-      if(!it.style.cursor) it.style.cursor = 'pointer';
-    });
-  }catch(e){}
+    // Bind early and on DOM ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bindHistoryHandler);
+    } else {
+      bindHistoryHandler();
+    }
+    // Also re-bind when menu gets re-created
+    var mo = new MutationObserver(bindHistoryHandler);
+    mo.observe(document.documentElement, {subtree:true, childList:true, attributes:true, attributeFilter:['class','hidden','style']});
+  }catch(e){ /* no-op */ }
 })();
 </script>
+
+</body>
+</html>
