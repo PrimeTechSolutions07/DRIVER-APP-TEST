@@ -2942,39 +2942,39 @@ try {
 
 
 
-<!-- driver-history unified router + iOS tap fix -->
+
+
+<!-- safe Driver History binder (non-intrusive) -->
 <script>
 (function(){
   try{
-    if (window.__dhUnifiedFix) return;
-    window.__dhUnifiedFix = true;
-    function bindHistoryHandler(){
-      var sheet = document.getElementById('menuSheet') || document.querySelector('.hamburger-menu, .menu-sheet');
+    if(window.__safeHistoryBind) return; window.__safeHistoryBind = true;
+    function bindOnce(){
+      // menu can be #menuSheet, .menu-sheet, or [data-menu-overlay]
+      var sheet = document.getElementById('menuSheet') || document.querySelector('.menu-sheet, [data-menu-overlay], .hamburger-menu');
       if(!sheet) return;
-      if (sheet.__dhBound) return;
-      sheet.__dhBound = true;
-      var handler = function(e){
-        var t = e.target && (e.target.closest ? e.target.closest('[data-action="history"]') : null);
-        if(!t) return;
-        e.preventDefault(); e.stopPropagation();
-        try{ if(typeof openHistory==='function') openHistory(); }catch(_){}
-      };
-      sheet.addEventListener('pointerup', handler, true);
-      sheet.addEventListener('click',     handler, true);
-      sheet.addEventListener('touchend',  handler, true);
+      // Observe when menu becomes visible, then attach a single handler
+      var handlerAttached = false;
+      function attach(){
+        if(handlerAttached) return;
+        var item = sheet.querySelector('[data-action="history"]');
+        if(!item) return;
+        handlerAttached = true;
+        // Make it behave like other items (no capture, no stopImmediatePropagation)
+        item.addEventListener('click', function(ev){
+          ev.preventDefault();
+          try{ if(typeof openHistory==='function') openHistory(); }catch(_){}
+        });
+        // Accessibility parity
+        item.setAttribute('role','button');
+        item.setAttribute('tabindex','0');
+        if(!item.style.cursor) item.style.cursor = 'pointer';
+      }
+      // Try immediately
+      attach();
+      // And when DOM mutates (menu rebuilt)
+      var mo = new MutationObserver(function(){ attach(); });
+      mo.observe(sheet, {subtree:true, childList:true});
     }
-    // Bind early and on DOM ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', bindHistoryHandler);
-    } else {
-      bindHistoryHandler();
-    }
-    // Also re-bind when menu gets re-created
-    var mo = new MutationObserver(bindHistoryHandler);
-    mo.observe(document.documentElement, {subtree:true, childList:true, attributes:true, attributeFilter:['class','hidden','style']});
-  }catch(e){ /* no-op */ }
-})();
-</script>
-
-</body>
-</html>
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindOnce);
+    else bindOnce();
