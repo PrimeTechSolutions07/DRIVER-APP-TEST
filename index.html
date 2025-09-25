@@ -56,7 +56,7 @@
   border: 1px solid #334155; border-radius: 16px;
   box-shadow: 0 22px 60px rgba(0,0,0,.45);
   padding: 16px;
-  transform: scale(0.74);
+  transform: scale(0.66);
   transform-origin: center;
 }
 #drvHistModal .tpl-head {
@@ -101,6 +101,14 @@
   background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:0;
   border-radius: 12px; padding: 10px 14px; font-weight:800;
 }
+
+
+#drvHistModal .tpl-footer{ display:flex; justify-content:space-between; align-items:center; }
+#drvHistModal .tpl-close{
+  background:#6b7280; color:#fff; border:0; border-radius:12px; padding:10px 14px; font-weight:800;
+}
+#drvHistModal .tpl-spacer{ width:120px; min-width:120px; height:1px; }
+
 /* Hide any previous calendar/list inside the modal so only the template shows */
 #drvHistModal .dh-cal, #drvHistModal .dh-list, #drvHistModal #dh_table_wrap, 
 #drvHistModal .calendar, #drvHistModal .dh-extra { display:none !important; }
@@ -287,7 +295,7 @@ window.addEventListener('DOMContentLoaded', function(){
   -webkit-tap-highlight-color: transparent !important;
   touch-action: manipulation !important;
 }
-#menuBtn:active { transform: scale(0.98); }
+#menuBtn:active { transform: scale(0.66); }
 #menuBtn:focus, #menuBtn:focus-visible { outline: none !important; box-shadow: none !important; }
 
 /* Slightly thicker lines for better visibility */
@@ -2259,7 +2267,7 @@ html { overflow-anchor: none !important; }
   }
   function closeMenu(){ const sheet=document.getElementById('menuSheet')||document.querySelector('.hamburger-menu, .menu-sheet'); if(!sheet) return; sheet.classList.remove('show'); sheet.setAttribute('hidden','hidden'); }
 
-  document.addEventListener('click', function(e){ const item=e.target.closest && e.target.closest('[data-action="history"], .dh-menu-item'); if(!item) return; e.preventDefault(); e.stopPropagation(); openHistory(); }, true);
+  document.addEventListener('click', function(e){ const item=e.target.closest && e.target.closest('[data-action="history"], .dh-menu-item'); if(!item) return; e.preventDefault(); e.stopPropagation(); try{closeMenu&&closeMenu();}catch(_){ } openHistory(); }, true);
 })();
 </script>
 
@@ -2311,7 +2319,7 @@ html { overflow-anchor: none !important; }
           '<div class="tpl-dow"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>'+
           '<div class="tpl-days"></div>'+
         '</div>'+
-        '<div class="tpl-footer"><button class="tpl-export" id="drvHistExport">Export PDF</button></div>'+
+        '<div class="tpl-footer"><div class="tpl-spacer"></div><button class="tpl-close" id="drvHistClose">Close</button><button class="tpl-export" id="drvHistExport">Export PDF</button></div>'+
         '<div class="jobs-pill">Job # - 0</div>';
       root.appendChild(card);
     }
@@ -2364,7 +2372,7 @@ html { overflow-anchor: none !important; }
 #drvHistModal { align-items:center; justify-content:center; }
 #drvHistModal .tpl-cal-card { position:relative; width:92vw; max-width:520px;
   background:#0b1220; color:#dbeafe; border:1px solid #334155; border-radius:16px;
-  box-shadow:0 22px 60px rgba(0,0,0,.45); padding:16px; transform:scale(0.74); transform-origin:center; }
+  box-shadow:0 22px 60px rgba(0,0,0,.45); padding:16px; transform:scale(0.66); transform-origin:center; }
 #drvHistModal .tpl-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
 #drvHistModal .tpl-month{font-weight:800; font-size:20px; color:#e5e7eb;}
 #drvHistModal .tpl-btn{width:36px; height:36px; display:flex; align-items:center; justify-content:center;
@@ -2379,6 +2387,14 @@ html { overflow-anchor: none !important; }
 #drvHistModal .tpl-day.active{background:#2563eb; color:#fff; border-color:#2563eb;}
 #drvHistModal .tpl-footer{margin-top:12px; display:flex; justify-content:flex-end;}
 #drvHistModal .tpl-export{background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:0; border-radius:12px; padding:10px 14px; font-weight:800;}
+
+
+#drvHistModal .tpl-footer{ display:flex; justify-content:space-between; align-items:center; }
+#drvHistModal .tpl-close{
+  background:#6b7280; color:#fff; border:0; border-radius:12px; padding:10px 14px; font-weight:800;
+}
+#drvHistModal .tpl-spacer{ width:120px; min-width:120px; height:1px; }
+
 #drvHistModal .jobs-pill{position:absolute; left:16px; bottom:14px; background:linear-gradient(135deg,#2563eb,#1d4ed8);
   color:#fff; border:1px solid rgba(147,197,253,.6); padding:8px 12px; font-weight:800; font-size:14px; border-radius:999px; box-shadow:0 8px 20px rgba(0,0,0,.35); pointer-events:none;}
 /* Hide any legacy content inside modal, just in case */
@@ -2400,7 +2416,7 @@ html { overflow-anchor: none !important; }
         '<div class="tpl-dow"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>' +
         '<div class="tpl-days"></div>' +
       '</div>' +
-      '<div class="tpl-footer"><button class="tpl-export">Export PDF</button></div>' +
+      '<div class="tpl-footer"><div class="tpl-spacer"></div><button class="tpl-close" id="drvHistClose">Close</button><button class="tpl-export" id="drvHistExport">Export PDF</button></div>' +
       '<div class="jobs-pill">Job # - 0</div>' +
     '</div>';
   }
@@ -2664,7 +2680,17 @@ html { overflow-anchor: none !important; }
     var btn = e.target.closest && e.target.closest('.tpl-export, #dh_export_pdf, #exportPdfBtn');
     if (!btn) return;
     e.preventDefault(); e.stopPropagation();
-    if (window.makePdf) { try { window.makePdf(); } catch(_){} return; }
+    if (window.makePdf) { try { window.makePdf(); } catch(_)
+
+document.addEventListener('click', function(e){
+  var btn = e.target.closest && e.target.closest('.tpl-close, #drvHistClose');
+  if(!btn) return;
+  e.preventDefault(); e.stopPropagation();
+  var m = document.getElementById('drvHistModal');
+  if(m){ try{ m.remove(); }catch(_) { m.style.display='none'; } }
+  try{ if (typeof closeMenu === 'function') closeMenu(); } catch(_) {}
+}, true);
+{} return; }
     // If makePdf is encapsulated, try to locate the function we injected
     try {
       var maker = (function(){
@@ -2731,6 +2757,16 @@ html { overflow-anchor: none !important; }
     e.preventDefault(); e.stopPropagation();
     window.__exportDriverHistoryPdf();
   }, true);
+
+document.addEventListener('click', function(e){
+  var btn = e.target.closest && e.target.closest('.tpl-close, #drvHistClose');
+  if(!btn) return;
+  e.preventDefault(); e.stopPropagation();
+  var m = document.getElementById('drvHistModal');
+  if(m){ try{ m.remove(); }catch(_) { m.style.display='none'; } }
+  try{ if (typeof closeMenu === 'function') closeMenu(); } catch(_) {}
+}, true);
+
 
   // Also bind by button text as a fallback ("Export PDF")
   document.addEventListener('click', function(e){
