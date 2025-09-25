@@ -927,7 +927,8 @@ document.addEventListener('keydown', function(ev){
         if(action==='photo') return handlePhoto();
         if(action==='yard') return handleYardMove();
         if(action==='breakdown') return handleBreakdown();
-      }
+
+  if(action==='history'){ try{ openHistory(); }catch(e){} return; }      }
 
       // Delegate clicks INSIDE overlay only
       sheet.addEventListener('click', function(e){
