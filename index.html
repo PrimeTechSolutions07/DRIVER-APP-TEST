@@ -927,8 +927,7 @@ document.addEventListener('keydown', function(ev){
         if(action==='photo') return handlePhoto();
         if(action==='yard') return handleYardMove();
         if(action==='breakdown') return handleBreakdown();
-
-  if(action==='history'){ try{ openHistory(); }catch(e){} return; }      }
+      }
 
       // Delegate clicks INSIDE overlay only
       sheet.addEventListener('click', function(e){
@@ -2943,3 +2942,27 @@ try {
 
 </body>
 </html>
+
+<!-- history mobile tap fix -->
+<script>
+(function(){
+  try{
+    if (window.__historyMobileFix) return;
+    window.__historyMobileFix = true;
+    function triggerHistory(e){
+      var t = e.target && (e.target.closest ? e.target.closest('[data-action="history"]') : null);
+      if(!t) return;
+      e.preventDefault(); e.stopPropagation();
+      try{ if(typeof openHistory==='function'){ openHistory(); } }catch(_){}
+    }
+    document.addEventListener('pointerup', triggerHistory, true);
+    document.addEventListener('touchend', triggerHistory, true);
+    document.addEventListener('click', triggerHistory, true);
+    (document.querySelectorAll('[data-action="history"]') || []).forEach(function(it){
+      it.setAttribute('role','button');
+      it.setAttribute('tabindex','0');
+      if(!it.style.cursor) it.style.cursor = 'pointer';
+    });
+  }catch(e){}
+})();
+</script>
