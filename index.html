@@ -926,8 +926,7 @@ document.addEventListener('keydown', function(ev){
         if(action==='complete') return handleComplete();
         if(action==='photo') return handlePhoto();
         if(action==='yard') return handleYardMove();
-        \1
-        if(action==='history') return (typeof openHistory==='function' ? openHistory() : undefined);
+        if(action==='breakdown') return handleBreakdown();
       }
 
       // Delegate clicks INSIDE overlay only
@@ -2517,158 +2516,6 @@ html { overflow-anchor: none !important; }
 
 
 <!-- jsPDF & html2canvas for client-side PDF generation -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-V9A2sL7u3Hh2j5w3Wk9Cqg8d7GmYx1mY9pUo7wJY2rHh/1H0Mfe0U8FQ8E1w8e1WZThS6H6JH2I8nq9Qm0l3rA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNa5CWd2zS8L9X3r8nO4sJr5Y0M1B0d1h7lS2d7d3Q3Z9bY1bE0qf3m9o6x0v6Y0sM9wC1j5b3oOQyI1aN2POg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<script>
-// === Driver History: Export PDF (downloads immediately) ===
-(function(){
-  function qs(sel, root){ return (root||document).querySelector(sel); }
-  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
-  function text(el){ return (el && (el.textContent || el.value) || '').trim(); }
-  function getSelectedDate(){
-    // 1) Preferred: data-selected-date inside Driver History modal
-    var el = qs('#drvHistModal [data-selected-date]');
-    if (el && text(el)) return text(el);
-    // 2) Read active day + month header
-    var active = qs('#drvHistModal .tpl-day.active');
-    var mon = qs('#drvHistModal .tpl-month');
-    if (active && mon){
-      var d = text(active);
-      var m = text(mon);
-      return m + ' ' + d;
-    }
-    // 3) Fallback to today ISO
-    try {
-      var dt = new Date();
-      var y = dt.getFullYear(), m2 = String(dt.getMonth()+1).padStart(2,'0'), d2 = String(dt.getDate()).padStart(2,'0');
-      return y + '-' + m2 + '-' + d2;
-    } catch(e) { return 'Date'; }
-  }
-  function getEmployee(){
-    var name = text(qs('#lblEmpName')) || 'Employee';
-    var id   = text(qs('#lblEmpId')) || '';
-    return { name, id };
-  }
-  function getRowsForDate(selDate){
-    // Try reading a hidden driver-history table if present
-    var rows = [];
-    var wrap = qs('#dh_table_wrap') || qs('#drvHistModal .dh-list') || null;
-    if (wrap){
-      var tr = qsa('tr', wrap).filter(function(r){
-        return qsa('td, th', r).length >= 5;
-      });
-      tr.forEach(function(r){
-        var cells = qsa('td, th', r).map(function(c){ return text(c); });
-        // Heuristic: find date in first 1-2 cells; if matches selected date substring, keep
-        var rdate = (cells[0] || '') + ' ' + (cells[1] || '');
-        if (!selDate || rdate.includes(selDate)){
-          rows.push({
-            date: cells[0] || '',
-            job:  cells[1] || '',
-            from: cells[2] || '',
-            to:   cells[3] || '',
-            container: cells[4] || '',
-            load: cells[5] || '',
-            empty: cells[6] || ''
-          });
-        }
-      });
-      if (rows.length) return rows;
-    }
-    // Fallback: use current assignment card as a single row
-    var jobOpt = qs('#assignmentSelect option:checked');
-    var jobNum = (text(jobOpt).match(/Job\s*#\s*(.+)/)||[])[1] || '';
-    return [{
-      date: selDate || '',
-      job: jobNum,
-      from: text(qs('#f_from')),
-      to: text(qs('#f_loadin')),
-      container: text(qs('#f_container')),
-      load: (function(){ var v=text(qs('#f_appt')); return /load/i.test(v)?'Load':''; })(),
-      empty: (function(){ var v=text(qs('#f_appt')); return /empty/i.test(v)?'Empty':''; })()
-    }];
-  }
-  window.makePdf = function(){
-    var selDate = getSelectedDate();
-    var emp = getEmployee();
-    var rows = getRowsForDate(selDate);
-    // Build PDF using jsPDF
-    const { jsPDF } = window.jspdf || {};
-    if (!jsPDF){ alert('PDF library failed to load.'); return; }
-    var doc = new jsPDF({ orientation:'portrait', unit:'pt', format:'letter' }); // 612x792pt
-    var x=56, y=64;
-    doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    var headerLeft = emp.name + (emp.id ? ' ('+emp.id+')' : '');
-    doc.text(headerLeft, x, y);
-    var headerRight = String(selDate || '');
-    var pageW = doc.internal.pageSize.getWidth();
-    doc.text(headerRight, pageW - 56, y, { align:'right' });
-    y += 18;
-    // Table headers (exact order requested)
-    var cols = ['DATE','JOB #','FROM','TO','CONTAINER #','LOAD','EMPTY'];
-    var colW = [72, 70, 140, 140, 110, 50, 60];
-    doc.setFontSize(10);
-    // Header row bg
-    doc.setDrawColor(30); doc.setFillColor(240); // neutral
-    // Manually draw header background rect
-    var hdrH = 22;
-    var curX = x; 
-    for (var i=0;i<cols.length;i++){ 
-      doc.rect(curX, y+4, colW[i], hdrH, 'S'); 
-      curX += colW[i]; 
-    }
-    // Header text
-    doc.setFont('helvetica','bold');
-    var tx = x + 4, ty = y + 20;
-    cols.forEach(function(c, i){
-      doc.text(c, tx, ty);
-      tx += colW[i];
-    });
-    y += hdrH + 10;
-    // Rows
-    doc.setFont('helvetica','normal');
-    var rowH = 18;
-    rows.forEach(function(r){
-      var cells = [r.date || '', r.job || '', r.from || '', r.to || '', r.container || '', r.load || '', r.empty || ''];
-      var cx = x + 4;
-      // draw row boxes
-      var bx = x, by = y - 12;
-      var cxx = x;
-      for (var k=0;k<colW.length;k++){ doc.rect(cxx, by, colW[k], rowH+8); cxx += colW[k]; }
-      // text
-      cells.forEach(function(val, i){
-        doc.text(String(val), cx, y);
-        cx += colW[i];
-      });
-      y += rowH + 10;
-      // new page if near bottom
-      if (y > (792 - 56)){ doc.addPage(); y = 64; }
-    });
-    window.makePdf = makePdf;
-    window.makePdf = makePdf;
-    // Save
-    var safeName = (emp.name || 'Employee').replace(/[^a-z0-9]+/gi,'_');
-    var file = 'DriverHistory_' + (selDate || 'Date') + '_' + (emp.id || 'ID') + '.pdf';
-    doc.save(file);
-  }
-  function wire(){
-    // Attach to common IDs/classes
-    var btn = document.getElementById('dh_export_pdf') 
-           || document.getElementById('exportPdfBtn') 
-           || document.querySelector('.tpl-export');
-    if (!btn) return;
-    btn.addEventListener('click', function(e){
-      e.preventDefault(); e.stopPropagation();
-      makePdf();
-    }, { passive:false });
-  }
-  if (document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', wire, {once:true}); }
-  else { wire(); }
-})();
-</script>
-
-
 <script>
 // Delegated click so Export PDF works even if the button is injected later
 (function(){
@@ -2942,39 +2789,780 @@ try {
 
 
 
+<!-- jsPDF + AutoTable (for landscape PDF with a clean table) -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-
-<!-- safe Driver History binder (non-intrusive) -->
 <script>
+// === Driver History: Export PDF (Landscape Template: Employee Name/ID; Date; Table of Jobs) ===
 (function(){
-  try{
-    if(window.__safeHistoryBind) return; window.__safeHistoryBind = true;
-    function bindOnce(){
-      // menu can be #menuSheet, .menu-sheet, or [data-menu-overlay]
-      var sheet = document.getElementById('menuSheet') || document.querySelector('.menu-sheet, [data-menu-overlay], .hamburger-menu');
-      if(!sheet) return;
-      // Observe when menu becomes visible, then attach a single handler
-      var handlerAttached = false;
-      function attach(){
-        if(handlerAttached) return;
-        var item = sheet.querySelector('[data-action="history"]');
-        if(!item) return;
-        handlerAttached = true;
-        // Make it behave like other items (no capture, no stopImmediatePropagation)
-        item.addEventListener('click', function(ev){
-          ev.preventDefault();
-          try{ if(typeof openHistory==='function') openHistory(); }catch(_){}
-        });
-        // Accessibility parity
-        item.setAttribute('role','button');
-        item.setAttribute('tabindex','0');
-        if(!item.style.cursor) item.style.cursor = 'pointer';
+  function qs(sel, root){ return (root||document).querySelector(sel); }
+  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+  function text(el){ return (el && (el.textContent || el.value) || '').trim(); }
+
+  // Pull date selected in the Driver History modal (ISO: YYYY-MM-DD)
+  function getSelectedDate(){
+    // Preferred: element that stores ISO date
+    var el = qs('#drvHistModal [data-selected-date]');
+    if (el && text(el)) return text(el);
+
+    // Fallback: infer from active day + month header
+    var active = qs('#drvHistModal .tpl-days .is-selected') || qs('#drvHistModal .tpl-days .is-today');
+    var monthLabel = text(qs('#drvHistModal .tpl-month')); // e.g., "September 2025"
+    var day = active ? text(active) : '';
+    if(!monthLabel || !day) return new Date().toISOString().slice(0,10);
+    try {
+      var dt = new Date(monthLabel + ' ' + day + ' 00:00:00');
+      if(!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
+    } catch(e){}
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function getEmployeeInfo(){
+    return {
+      name: text(qs('#lblEmpName')) || 'Employee',
+      id: text(qs('#lblEmpId')) || 'ID'
+    };
+  }
+
+  // Try to load records from localStorage (saved work history), then fall back to a global 'sample' array if present.
+  function loadHistoryData(){
+    var arr = [];
+    try{
+      var stored = localStorage.getItem('driver_history');
+      if(stored){ arr = JSON.parse(stored) || []; }
+    }catch(e){}
+
+    // If nothing in storage, look for a global "sample" array (used by demo/seed data)
+    try{
+      if((!arr || !arr.length) && window.sample && Array.isArray(window.sample)){
+        arr = window.sample.slice();
       }
-      // Try immediately
-      attach();
-      // And when DOM mutates (menu rebuilt)
-      var mo = new MutationObserver(function(){ attach(); });
-      mo.observe(sheet, {subtree:true, childList:true});
+    }catch(e){}
+    return Array.isArray(arr) ? arr : [];
+  }
+
+  function getCurrentDriverId(){
+    // Look for various labels already in the UI
+    var el = qs('#lblEmpId') || qs('#drvId') || qs('#lblDriver');
+    return (el ? text(el) : 'DEMO').trim();
+  }
+
+  function filterRowsByDateAndDriver(allRows, dateISO, driverId){
+    return allRows.filter(function(r){
+      // normalize keys across record shapes (sample vs saved)
+      var recDate = r.date || r.Date || r.selectedDate || '';
+      var recDriver = r.driverId || r.empId || r.employeeId || '';
+      return (recDate === dateISO) && (!driverId || recDriver === driverId);
+    });
+  }
+
+  function mapRowsForTable(rows){
+    // Normalize to: [Job #, From, To, Container #, Load/Empty]
+    return rows.map(function(r){
+      var job = r.job || r.id || r.jobId || '';
+      var from = r.from || r.origin || '';
+      var to = r.to || r.loadin || r.destination || '';
+      var ctr = r.container || r.containerNo || r.containerId || '';
+      var le  = r.loadEmpty || r.load_status || r.status || '';
+      return [job, from, to, ctr, le];
+    });
+  }
+
+  function buildAndSavePdf(opts){
+    var emp = opts.employee;
+    var dateISO = opts.dateISO;
+    var rows = opts.rows;
+
+    var jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : window.jsPDF;
+    var doc = new jsPDF({orientation:'landscape', unit:'pt', format:'letter'});
+
+    // Header
+    var leftX = 40, topY = 40;
+    doc.setFont('helvetica','bold'); doc.setFontSize(14);
+    doc.text('Driver Daily History', leftX, topY);
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(11);
+    doc.text('Employee Name: ' + (emp.name || ''), leftX, topY + 20);
+    doc.text('Employee ID: '   + (emp.id || ''),   leftX, topY + 38);
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text('Date: ' + dateISO, 720, topY, {align:'right'});
+
+    // Table
+    var head = [['Job #','From','To','Container #','Load/Empty']];
+    var body = rows.length ? rows : [['','','','','']];
+
+    if (doc.autoTable) {
+      doc.autoTable({
+        startY: topY + 60,
+        head: head,
+        body: body,
+        styles: { font:'helvetica', fontSize: 10, cellPadding: 6, lineWidth: 0.5 },
+        headStyles: { fillColor: [20, 63, 163], textColor: 255, halign:'left' },
+        theme: 'grid',
+        margin: {left: 40, right: 40}
+      });
+    } else {
+      // Fallback minimal rendering if autotable failed to load
+      var y = topY + 70;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text(head[0].join('    '), leftX, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 18;
+      rows.forEach(function(row){
+        doc.text((row.join('    ')||''), leftX, y);
+        y += 16;
+      });
     }
-    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindOnce);
-    else bindOnce();
+
+    var fname = 'Driver_History_' + dateISO + '.pdf';
+    doc.save(fname);
+  }
+
+  function handleExport(){
+    var dateISO = getSelectedDate();
+    var emp = getEmployeeInfo();
+    var all = loadHistoryData();
+    var rows = filterRowsByDateAndDriver(all, dateISO, getCurrentDriverId());
+    var tableRows = mapRowsForTable(rows);
+    buildAndSavePdf({employee:emp, dateISO:dateISO, rows:tableRows});
+  }
+
+  // Wire the button (works even if created dynamically)
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    if (!t) return;
+    if (t.id === 'drvHistExport') {
+      ev.preventDefault();
+      try { handleExport(); } catch(e){ console.error('Export error:', e); }
+    }
+  }, true);
+})();
+</script>
+
+
+<!-- jsPDF + AutoTable (for landscape PDF with a clean table) -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+// === Driver History: Export PDF (Landscape Template; reads VISIBLE UI rows for selected date) ===
+(function(){
+  function qs(sel, root){ return (root||document).querySelector(sel); }
+  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+  function text(el){ return (el && (el.textContent || el.value) || '').trim(); }
+
+  function getSelectedDate(){
+    var el = qs('#drvHistModal [data-selected-date]');
+    if (el && text(el)) return text(el);
+    var active = qs('#drvHistModal .tpl-days .is-selected') || qs('#drvHistModal .tpl-days .is-today');
+    var monthLabel = text(qs('#drvHistModal .tpl-month'));
+    var day = active ? text(active) : '';
+    if(!monthLabel || !day) return new Date().toISOString().slice(0,10);
+    try {
+      var dt = new Date(monthLabel + ' ' + day + ' 00:00:00');
+      if(!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
+    } catch(e){}
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function getEmployeeInfo(){
+    return {
+      name: text(qs('#lblEmpName')) || 'Employee',
+      id: text(qs('#lblEmpId')) || 'ID'
+    };
+  }
+
+  // 1) PRIMARY SOURCE: parse VISIBLE rows from the Driver History UI for the selected date.
+  // We try to be resilient across different markups.
+  function collectRowsFromUI(){
+    var scope = qs('#drvHistModal') || document;
+    var rows = [];
+
+    // Case A: A table with headers "Job #, From, To, Container #, Load/Empty"
+    var table = qs('table, .job-table, #drvHistTable', scope);
+    if (table) {
+      // Find body rows ignoring headers
+      var trList = qsa('tbody tr', table);
+      if (!trList.length) trList = qsa('tr', table).filter(function(tr){
+        return !qsa('th', tr).length;
+      });
+      trList.forEach(function(tr){
+        var cells = qsa('td, .cell', tr).map(function(td){ return text(td); });
+        if (cells.length >= 5) {
+          rows.push([cells[0], cells[1], cells[2], cells[3], cells[4]]);
+        } else if (cells.length) {
+          // Try to map by data-label attr if present
+          var job = text(qs('[data-label*="Job"]', tr)) || cells[0] || '';
+          var from = text(qs('[data-label*="From"]', tr)) || cells[1] || '';
+          var to   = text(qs('[data-label*="To"]', tr))   || cells[2] || '';
+          var ctr  = text(qs('[data-label*="Container"]', tr)) || cells[3] || '';
+          var le   = text(qs('[data-label*="Load"],[data-label*="Empty"]', tr)) || cells[4] || '';
+          rows.push([job, from, to, ctr, le]);
+        }
+      });
+    }
+
+    // Case B: A list of .job-row items with sub-fields
+    if (!rows.length) {
+      qsa('.job-row, [data-job-row]', scope).forEach(function(row){
+        var job = text(qs('[data-field="job"], .job-id, .job-num', row));
+        var from = text(qs('[data-field="from"], .from', row));
+        var to   = text(qs('[data-field="to"], .to', row));
+        var ctr  = text(qs('[data-field="container"], .container', row));
+        var le   = text(qs('[data-field="loadEmpty"], .load-empty, .loadEmpty', row));
+        if (job || from || to || ctr || le) {
+          rows.push([job, from, to, ctr, le]);
+        }
+      });
+    }
+    return rows;
+  }
+
+  // 2) SECONDARY SOURCE (fallback): localStorage driver_history filtered by date/driver
+  function loadHistoryData(){
+    var arr = [];
+    try{
+      var stored = localStorage.getItem('driver_history');
+      if(stored){ arr = JSON.parse(stored) || []; }
+    }catch(e){}
+    try{
+      if((!arr || !arr.length) && window.sample && Array.isArray(window.sample)){
+        arr = window.sample.slice();
+      }
+    }catch(e){}
+    return Array.isArray(arr) ? arr : [];
+  }
+
+  function getCurrentDriverId(){
+    var el = qs('#lblEmpId') || qs('#drvId') || qs('#lblDriver');
+    return (el ? text(el) : 'DEMO').trim();
+  }
+
+  function filterRowsByDateAndDriver(allRows, dateISO, driverId){
+    return allRows.filter(function(r){
+      var recDate = r.date || r.Date || r.selectedDate || '';
+      var recDriver = r.driverId || r.empId || r.employeeId || '';
+      return (recDate === dateISO) && (!driverId || recDriver === driverId);
+    });
+  }
+
+  function mapRowsForTable(rows){
+    return rows.map(function(r){
+      var job = r.job || r.id || r.jobId || '';
+      var from = r.from || r.origin || '';
+      var to = r.to || r.loadin || r.destination || '';
+      var ctr = r.container || r.containerNo || r.containerId || '';
+      var le  = r.loadEmpty || r.load_status || r.status || '';
+      return [job, from, to, ctr, le];
+    });
+  }
+
+  function buildAndSavePdf(opts){
+    var emp = opts.employee;
+    var dateISO = opts.dateISO;
+    var rows = opts.rows;
+
+    var jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : window.jsPDF;
+    var doc = new jsPDF({orientation:'landscape', unit:'pt', format:'letter'});
+
+    var leftX = 40, topY = 40;
+    doc.setFont('helvetica','bold'); doc.setFontSize(14);
+    doc.text('Driver Daily History', leftX, topY);
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(11);
+    doc.text('Employee Name: ' + (emp.name || ''), leftX, topY + 20);
+    doc.text('Employee ID: '   + (emp.id || ''),   leftX, topY + 38);
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text('Date: ' + dateISO, 720, topY, {align:'right'});
+
+    var head = [['Job #','From','To','Container #','Load/Empty']];
+    var body = rows.length ? rows : [['','','','','']];
+
+    if (doc.autoTable) {
+      doc.autoTable({
+        startY: topY + 60,
+        head: head,
+        body: body,
+        styles: { font:'helvetica', fontSize: 10, cellPadding: 6, lineWidth: 0.5 },
+        headStyles: { fillColor: [20, 63, 163], textColor: 255, halign:'left' },
+        theme: 'grid',
+        margin: {left: 40, right: 40},
+        // Make 'Container #' and 'Load/Empty' narrower, leave others auto
+        columnStyles: {
+          3: { cellWidth: 110, halign:'left' },
+          4: { cellWidth: 100, halign:'left' }
+        }
+      });
+    } else {
+      var y = topY + 70;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text(head[0].join('    '), leftX, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 18;
+      rows.forEach(function(row){
+        doc.text((row.join('    ')||''), leftX, y);
+        y += 16;
+      });
+    }
+
+    var fname = 'Driver_History_' + dateISO + '.pdf';
+    doc.save(fname);
+  }
+
+  function handleExport(){
+    var dateISO = getSelectedDate();
+    var emp = getEmployeeInfo();
+
+    // Prefer rows the user currently sees in the UI
+    var uiRows = collectRowsFromUI();
+
+    var finalRows = uiRows;
+    if (!finalRows.length) {
+      // fallback to stored/sample data filtered by date + driver
+      var all = loadHistoryData();
+      var filtered = filterRowsByDateAndDriver(all, dateISO, getCurrentDriverId());
+      finalRows = mapRowsForTable(filtered);
+    }
+
+    buildAndSavePdf({employee:emp, dateISO:dateISO, rows:finalRows});
+  }
+
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    if (!t) return;
+    if (t.id === 'drvHistExport') {
+      ev.preventDefault();
+      try { handleExport(); } catch(e){ console.error('Export error:', e); }
+    }
+  }, true);
+})();
+</script>
+
+
+<!-- jsPDF + AutoTable (for landscape PDF with a clean table) -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+// === Driver History: Export PDF (Landscape; UI rows first; From/To equal widths; Job # smaller) ===
+(function(){
+  function qs(sel, root){ return (root||document).querySelector(sel); }
+  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+  function text(el){ return (el && (el.textContent || el.value) || '').trim(); }
+
+  function getSelectedDate(){
+    var el = qs('#drvHistModal [data-selected-date]');
+    if (el && text(el)) return text(el);
+    var active = qs('#drvHistModal .tpl-days .is-selected') || qs('#drvHistModal .tpl-days .is-today');
+    var monthLabel = text(qs('#drvHistModal .tpl-month'));
+    var day = active ? text(active) : '';
+    if(!monthLabel || !day) return new Date().toISOString().slice(0,10);
+    try {
+      var dt = new Date(monthLabel + ' ' + day + ' 00:00:00');
+      if(!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
+    } catch(e){}
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function getEmployeeInfo(){
+    return {
+      name: text(qs('#lblEmpName')) || 'Employee',
+      id: text(qs('#lblEmpId')) || 'ID'
+    };
+  }
+
+  // PRIMARY: collect the rows the user currently sees in the Driver History UI
+  function collectRowsFromUI(){
+    var scope = qs('#drvHistModal') || document;
+    var rows = [];
+    var table = qs('table, .job-table, #drvHistTable', scope);
+    if (table) {
+      var trList = qsa('tbody tr', table);
+      if (!trList.length) trList = qsa('tr', table).filter(function(tr){ return !qsa('th', tr).length; });
+      trList.forEach(function(tr){
+        var cells = qsa('td, .cell', tr).map(function(td){ return text(td); });
+        if (cells.length >= 5) rows.push([cells[0], cells[1], cells[2], cells[3], cells[4]]);
+      });
+    }
+    if (!rows.length) {
+      qsa('.job-row, [data-job-row]', scope).forEach(function(row){
+        var job = text(qs('[data-field="job"], .job-id, .job-num', row));
+        var from = text(qs('[data-field="from"], .from', row));
+        var to   = text(qs('[data-field="to"], .to', row));
+        var ctr  = text(qs('[data-field="container"], .container', row));
+        var le   = text(qs('[data-field="loadEmpty"], .load-empty, .loadEmpty', row));
+        if (job || from || to || ctr || le) rows.push([job, from, to, ctr, le]);
+      });
+    }
+    return rows;
+  }
+
+  // SECONDARY: look for a global examples map keyed by YYYY-MM-DD
+  function collectRowsFromExamplesByDate(dateISO){
+    try {
+      if (window.sampleByDate && window.sampleByDate[dateISO]) {
+        var arr = window.sampleByDate[dateISO] || [];
+        return arr.map(function(r){
+          return [r.job||r.id||r.jobId||'', r.from||r.origin||'', r.to||r.destination||r.loadin||'', r.container||r.containerNo||'', r.loadEmpty||r.status||''];
+        });
+      }
+    } catch(e){}
+    return [];
+  }
+
+  // TERTIARY: localStorage/sample arrays filtered by date and driver
+  function loadHistoryData(){
+    var arr = [];
+    try{ var stored = localStorage.getItem('driver_history'); if (stored) arr = JSON.parse(stored)||[]; }catch(e){}
+    try{ if((!arr||!arr.length) && window.sample && Array.isArray(window.sample)) arr = window.sample.slice(); }catch(e){}
+    return Array.isArray(arr) ? arr : [];
+  }
+  function getCurrentDriverId(){
+    var el = qs('#lblEmpId') || qs('#drvId') || qs('#lblDriver');
+    return (el ? text(el) : 'DEMO').trim();
+  }
+  function filterRowsByDateAndDriver(allRows, dateISO, driverId){
+    return allRows.filter(function(r){
+      var recDate = r.date || r.Date || r.selectedDate || '';
+      var recDriver = r.driverId || r.empId || r.employeeId || '';
+      return (recDate === dateISO) && (!driverId || recDriver === driverId);
+    });
+  }
+  function mapRowsForTable(rows){
+    return rows.map(function(r){
+      var job = r.job || r.id || r.jobId || '';
+      var from = r.from || r.origin || '';
+      var to = r.to || r.loadin || r.destination || '';
+      var ctr = r.container || r.containerNo || r.containerId || '';
+      var le  = r.loadEmpty || r.load_status || r.status || '';
+      return [job, from, to, ctr, le];
+    });
+  }
+
+  function buildAndSavePdf(opts){
+    var emp = opts.employee;
+    var dateISO = opts.dateISO;
+    var rows = opts.rows;
+
+    var jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : window.jsPDF;
+    var doc = new jsPDF({orientation:'landscape', unit:'pt', format:'letter'});
+
+    var leftX = 40, topY = 40;
+    doc.setFont('helvetica','bold'); doc.setFontSize(14);
+    doc.text('Driver Daily History', leftX, topY);
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(11);
+    doc.text('Employee Name: ' + (emp.name || ''), leftX, topY + 20);
+    doc.text('Employee ID: '   + (emp.id || ''),   leftX, topY + 38);
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text('Date: ' + dateISO, 720, topY, {align:'right'});
+
+    var head = [['Job #','From','To','Container #','Load/Empty']];
+    var body = rows.length ? rows : [['','','','','']];
+
+    if (doc.autoTable) {
+      doc.autoTable({
+        startY: topY + 60,
+        head: head,
+        body: body,
+        styles: { font:'helvetica', fontSize: 10, cellPadding: 6, lineWidth: 0.5 },
+        headStyles: { fillColor: [20, 63, 163], textColor: 255, halign:'left' },
+        theme: 'grid',
+        margin: {left: 40, right: 40},
+        // Column widths: Job # smaller; From & To same; Container # & Load/Empty smaller
+        columnStyles: {
+          0: { cellWidth: 90,  halign:'left' }, // Job #
+          1: { cellWidth: 190, halign:'left' }, // From
+          2: { cellWidth: 190, halign:'left' }, // To
+          3: { cellWidth: 110, halign:'left' }, // Container #
+          4: { cellWidth: 100, halign:'left' }  // Load/Empty
+        }
+      });
+    } else {
+      var y = topY + 70;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text(head[0].join('    '), leftX, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 18;
+      rows.forEach(function(row){
+        doc.text((row.join('    ')||''), leftX, y);
+        y += 16;
+      });
+    }
+
+    doc.save('Driver_History_' + dateISO + '.pdf');
+  }
+
+  function handleExport(){
+    var dateISO = getSelectedDate();
+    var emp = getEmployeeInfo();
+
+    var uiRows = collectRowsFromUI();
+    var finalRows = uiRows;
+
+    if (!finalRows.length) {
+      // try global examples keyed by date
+      finalRows = collectRowsFromExamplesByDate(dateISO);
+    }
+    if (!finalRows.length) {
+      // fallback to stored/sample arrays filtered by date+driver
+      var all = loadHistoryData();
+      var filtered = filterRowsByDateAndDriver(all, dateISO, getCurrentDriverId());
+      finalRows = mapRowsForTable(filtered);
+    }
+
+    buildAndSavePdf({employee:emp, dateISO:dateISO, rows:finalRows});
+  }
+
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    if (!t) return;
+    if (t.id === 'drvHistExport') {
+      ev.preventDefault();
+      try { handleExport(); } catch(e){ console.error('Export error:', e); }
+    }
+  }, true);
+})();
+</script>
+
+
+<!-- jsPDF + AutoTable (for landscape PDF with a clean table) -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+// === Driver History: Export PDF (Landscape; robust date->rows mapping) ===
+(function(){
+  function qs(sel, root){ return (root||document).querySelector(sel); }
+  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+  function text(el){ return (el && (el.textContent || el.value) || '').trim(); }
+  function isObj(x){ return x && typeof x === 'object'; }
+
+  // Build a variety of keys from an ISO date e.g. "2025-09-25"
+  function dateKeys(iso){
+    // iso expected "YYYY-MM-DD"
+    try {
+      var y = iso.slice(0,4), m = iso.slice(5,7), d = iso.slice(8,10);
+      var M = String(parseInt(m,10)); var D = String(parseInt(d,10));
+      return [
+        iso,                     // 2025-09-25
+        y + '/' + m + '/' + d,   // 2025/09/25
+        m + '/' + d + '/' + y,   // 09/25/2025
+        M + '/' + D + '/' + y,   // 9/25/2025
+        y + m + d,               // 20250925
+        d + '-' + m + '-' + y    // 25-09-2025
+      ];
+    } catch(e){ return [iso]; }
+  }
+
+  function getSelectedDate(){
+    var el = qs('#drvHistModal [data-selected-date]');
+    if (el && text(el)) return text(el);
+    var active = qs('#drvHistModal .tpl-days .is-selected') || qs('#drvHistModal .tpl-days .is-today');
+    var monthLabel = text(qs('#drvHistModal .tpl-month'));
+    var day = active ? text(active) : '';
+    if(!monthLabel || !day) return new Date().toISOString().slice(0,10);
+    try {
+      var dt = new Date(monthLabel + ' ' + day + ' 00:00:00');
+      if(!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
+    } catch(e){}
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function getEmployeeInfo(){
+    return {
+      name: text(qs('#lblEmpName')) || 'Employee',
+      id: text(qs('#lblEmpId')) || 'ID'
+    };
+  }
+
+  // 1) Take what the user sees in the UI (highest fidelity)
+  function collectRowsFromUI(){
+    var scope = qs('#drvHistModal') || document;
+    var rows = [];
+    var table = qs('table, .job-table, #drvHistTable', scope);
+    if (table) {
+      var trList = qsa('tbody tr', table);
+      if (!trList.length) trList = qsa('tr', table).filter(function(tr){ return !qsa('th', tr).length; });
+      trList.forEach(function(tr){
+        var cells = qsa('td, .cell', tr).map(function(td){ return text(td); });
+        if (cells.length >= 5) rows.push([cells[0], cells[1], cells[2], cells[3], cells[4]]);
+      });
+    }
+    if (!rows.length) {
+      qsa('.job-row, [data-job-row]', scope).forEach(function(row){
+        var job = text(qs('[data-field="job"], .job-id, .job-num', row));
+        var from = text(qs('[data-field="from"], .from', row));
+        var to   = text(qs('[data-field="to"], .to', row));
+        var ctr  = text(qs('[data-field="container"], .container', row));
+        var le   = text(qs('[data-field="loadEmpty"], .load-empty, .loadEmpty', row));
+        if (job || from || to || ctr || le) rows.push([job, from, to, ctr, le]);
+      });
+    }
+    return rows;
+  }
+
+  // 2) Examples keyed by date: probe multiple common globals and formats
+  function collectFromExamples(dateISO){
+    var keys = dateKeys(dateISO);
+    var candidates = [
+      'sampleByDate','examplesByDate','jobsByDate','historyByDate','driverHistoryByDate',
+      'drvHistExamples','driverExamples','jobExamples','demoByDate','seedByDate'
+    ];
+    for (var i=0;i<candidates.length;i++){
+      var name = candidates[i];
+      var obj = window[name];
+      if (!isObj(obj)) continue;
+      for (var j=0;j<keys.length;j++){
+        var key = keys[j];
+        if (Array.isArray(obj[key]) && obj[key].length){
+          return obj[key].map(mapRec);
+        }
+      }
+    }
+    // hidden JSON blobs in DOM
+    var jsonEl = qs('#drvHistModal [data-jobs-json], [data-jobs-json]');
+    if (jsonEl && text(jsonEl)) {
+      try {
+        var parsed = JSON.parse(text(jsonEl));
+        for (var k=0;k<keys.length;k++){
+          var arr = parsed[keys[k]];
+          if (Array.isArray(arr) && arr.length) return arr.map(mapRec);
+        }
+      } catch(e){}
+    }
+    return [];
+  }
+
+  // 3) Storage-backed history (fallback)
+  function collectFromStorage(dateISO){
+    var all = [];
+    try{
+      var byDate = localStorage.getItem('driver_history_by_date');
+      if (byDate){
+        var m = JSON.parse(byDate);
+        var keys = dateKeys(dateISO);
+        for (var i=0;i<keys.length;i++){
+          var arr = m[keys[i]];
+          if (Array.isArray(arr) && arr.length){ all = arr; break; }
+        }
+      }
+      if (!all.length){
+        var flat = localStorage.getItem('driver_history');
+        if (flat){ all = JSON.parse(flat)||[]; }
+      }
+    }catch(e){}
+    if (!Array.isArray(all)) all = [];
+    // Optional: filter by date if flat
+    if (all.length && !Array.isArray(all[0])){
+      var filtered = all.filter(function(r){
+        var d = r.date || r.Date || r.selectedDate || '';
+        return !!d && (d === dateISO);
+      });
+      if (filtered.length) all = filtered;
+    }
+    return all.map(mapRec);
+  }
+
+  function mapRec(r){
+    // Normalize to [Job #, From, To, Container #, Load/Empty]
+    var job = (r && (r.job || r.id || r.jobId || r.num || r.code)) || '';
+    var from = (r && (r.from || r.origin || r.pickup || r.pickupName)) || '';
+    var to = (r && (r.to || r.destination || r.delivery || r.loadin || r.dropoff)) || '';
+    var ctr = (r && (r.container || r.containerNo || r.containerId || r.cntr || r.equipment)) || '';
+    var le  = (r && (r.loadEmpty || r.load_status || r.status || r.loadState || r.le)) || '';
+    return [job, from, to, ctr, le];
+  }
+
+  function buildAndSavePdf(opts){
+    var emp = opts.employee;
+    var dateISO = opts.dateISO;
+    var rows = (opts.rows || []).filter(function(r){
+      // Remove completely empty rows
+      return Array.isArray(r) && r.some(function(x){ return (x||'').toString().trim().length; });
+    });
+
+    var jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : window.jsPDF;
+    var doc = new jsPDF({orientation:'landscape', unit:'pt', format:'letter'});
+
+    var leftX = 40, topY = 40;
+    doc.setFont('helvetica','bold'); doc.setFontSize(14);
+    doc.text('Driver Daily History', leftX, topY);
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(11);
+    doc.text('Employee Name: ' + (emp.name || ''), leftX, topY + 20);
+    doc.text('Employee ID: '   + (emp.id || ''),   leftX, topY + 38);
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text('Date: ' + dateISO, 720, topY, {align:'right'});
+
+    var head = [['Job #','From','To','Container #','Load/Empty']];
+    var body = rows.length ? rows : [['','','','','']];
+
+    if (doc.autoTable) {
+      doc.autoTable({
+        startY: topY + 60,
+        head: head,
+        body: body,
+        styles: { font:'helvetica', fontSize: 10, cellPadding: 6, lineWidth: 0.5 },
+        headStyles: { fillColor: [20, 63, 163], textColor: 255, halign:'left' },
+        theme: 'grid',
+        margin: {left: 40, right: 40},
+        columnStyles: {
+          0: { cellWidth: 90,  halign:'left' },  // Job # (smaller)
+          1: { cellWidth: 190, halign:'left' },  // From (same width as To)
+          2: { cellWidth: 190, halign:'left' },  // To
+          3: { cellWidth: 110, halign:'left' },  // Container # (smaller)
+          4: { cellWidth: 100, halign:'left' }   // Load/Empty (smaller)
+        }
+      });
+    } else {
+      var y = topY + 70;
+      doc.setFont('helvetica','bold'); doc.setFontSize(11);
+      doc.text(head[0].join('    '), leftX, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      y += 18;
+      rows.forEach(function(row){
+        doc.text((row.join('    ')||''), leftX, y);
+        y += 16;
+      });
+    }
+
+    doc.save('Driver_History_' + dateISO + '.pdf');
+  }
+
+  function handleExport(){
+    var dateISO = getSelectedDate();
+    var emp = getEmployeeInfo();
+
+    // Priority: UI rows user is seeing for that date
+    var uiRows = collectRowsFromUI();
+
+    // If none, use the preset examples keyed by date (multiple globals/keys supported)
+    var exRows = [];
+    if (!uiRows.length) exRows = collectFromExamples(dateISO);
+
+    // If still none, use storage-backed data filtered by date
+    var stRows = [];
+    if (!uiRows.length && !exRows.length) stRows = collectFromStorage(dateISO);
+
+    var finalRows = uiRows.length ? uiRows : (exRows.length ? exRows : stRows);
+    buildAndSavePdf({employee:emp, dateISO:dateISO, rows:finalRows});
+  }
+
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    if (!t) return;
+    if (t.id === 'drvHistExport') {
+      ev.preventDefault();
+      try { handleExport(); } catch(e){ console.error('Export error:', e); }
+    }
+  }, true);
+})();
+</script>
+
+</body></html>
