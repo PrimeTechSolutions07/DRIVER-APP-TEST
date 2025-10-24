@@ -120,7 +120,7 @@ window.addEventListener('DOMContentLoaded', function(){
 
   function openModal(kind){
     const map = { enroute: ['Confirm En Route','Mark this assignment as En Route?'],
-                  arrived: ['Confirm Arrived','Mark this assignment as Arrived?'] };
+                  arrived: ['Confirm Arrived','Mark Arrived and notify Customer?'] };
     title.textContent = map[kind][0];
     text.textContent  = map[kind][1];
     btnConfirm.dataset.kind = kind;
@@ -461,6 +461,12 @@ html, body, .iphone, .screen, #sec-assignment, .brand-grad {
     const btnBegin=document.getElementById('btnBegin');btnBegin.addEventListener('click',()=>{secShift.classList.add('hidden');secAssign.classList.remove('hidden');populateAssignments()});
 
     const assignments=[{id:'CCL-5001',from:'Yusen Logistics (Torrance)',loadin:'Long Beach Port',container:'TCLU2948209',appt:'Empty',bk:'1015',window:'8:00 AM',instruction:'Chassis back to Compton yard'},{id:'CCL-5002',from:'Long Beach Port',loadin:'Evergreen',container:'EGLV1234567',appt:'Load',bk:'6798',window:'10:00 AM',instruction:'Return chassis to Wilmington yard'}];
+    // Hidden map addresses for precise navigation (not shown in UI)
+    const MAP_ADDRESSES = {
+      "Yusen Logistics (Torrance)": "19001 Harborgate Way, Torrance, CA 90501",
+      "Evergreen": "389 Terminal Island Way, Terminal Island, CA 90731"
+    };
+
     const assignmentSelect=document.getElementById('assignmentSelect');const fields={from:document.getElementById('f_from'),loadin:document.getElementById('f_loadin'),container:document.getElementById('f_container'),appt:document.getElementById('f_appt'),bk: document.getElementById('f_bk_input'),window:document.getElementById('f_window'),instruction:document.getElementById('f_instruction')};
     function populateAssignments(){assignmentSelect.innerHTML=assignments.map((a,i)=>`<option value="${i}">Job # ${a.id}</option>`).join('');setAssignment(0)}
     function setAssignment(i){
@@ -535,7 +541,7 @@ html, body, .iphone, .screen, #sec-assignment, .brand-grad {
 
   function openAction(kind){
     if(kind==='enroute'){ aTitle.textContent='Confirm En Route?'; aText.textContent=''; }
-    else { aTitle.textContent='Confirm Arrived?'; aText.textContent=''; }
+    else { aTitle.textContent='Confirm Arrived?'; aText.textContent='Mark Arrived and notify Customer?'; }
     aOK.dataset.kind = kind;
     showModal(actionModal);
   }
@@ -2014,12 +2020,17 @@ html { overflow-anchor: none !important; }
     var to = (el && el.textContent || '').trim();
     return to || 'Destination';
   }
-  function openAppleMaps(to){
-    window.location.href = 'maps://?daddr=' + encodeURIComponent(to) + '&dirflg=d';
-  }
+  function resolveAddress(name){
+  try { return (MAP_ADDRESSES && MAP_ADDRESSES[name]) || name; } catch(_) { return name; }
+}
+function openAppleMaps(to){
+  const addr = resolveAddress((to||'').trim());
+  window.location.href = 'maps://?daddr=' + encodeURIComponent(addr) + '&dirflg=d';
+}
   function openGoogleMaps(to){
-    window.location.href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(to) + '&travelmode=driving';
-  }
+  const addr = resolveAddress((to||'').trim());
+  window.location.href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr) + '&travelmode=driving';
+}
   function showMapsChooser(to){
     var exist = document.getElementById('mm_modal_host');
     if (exist) { try{ exist.remove(); }catch(e){} }
