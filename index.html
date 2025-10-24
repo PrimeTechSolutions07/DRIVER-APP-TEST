@@ -46,73 +46,6 @@
 /* Guards for menu button placement/clickability */
 .assign-header, .status-bar, .phone-frame { position: relative; }
 #menuBtn { position:absolute !important; top:2px !important; left:4px !important; z-index:100000 !important; pointer-events:auto !important; }
-
-/* === Clean Driver History Calendar (template style, 15% smaller) === */
-#drvHistModal { display: flex !important; align-items: center; justify-content: center; }
-#drvHistModal .tpl-cal-card {
-  position: relative;
-  width: 92vw; max-width: 520px;
-  background: #0b1220; color:#dbeafe;
-  border: 1px solid #334155; border-radius: 16px;
-  box-shadow: 0 22px 60px rgba(0,0,0,.45);
-  padding: 16px;
-  transform: scale(0.66);
-  transform-origin: center;
-}
-#drvHistModal .tpl-head {
-  display:flex; align-items:center; justify-content:space-between;
-  margin-bottom: 12px;
-}
-#drvHistModal .tpl-month { font-weight: 800; font-size: 20px; letter-spacing:.3px; color:#e5e7eb; }
-#drvHistModal .tpl-nav { display:flex; gap:10px; }
-#drvHistModal .tpl-btn {
-  width: 36px; height: 36px; display:flex; align-items:center; justify-content:center;
-  border-radius: 12px; border:1px solid #334155; background:#111827; color:#e5e7eb;
-}
-#drvHistModal .tpl-grid {
-  border: 1px solid #334155; border-radius: 12px; padding: 12px;
-  background: #0f172a;
-}
-#drvHistModal .tpl-dow {
-  display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:10px;
-  color:#94a3b8; font-weight:600; font-size:13px; text-align:center;
-}
-#drvHistModal .tpl-days {
-  display:grid; grid-template-columns:repeat(7,1fr); gap:10px;
-}
-#drvHistModal .tpl-day {
-  height: 48px; display:flex; align-items:center; justify-content:center;
-  border-radius: 12px; border:1px solid #334155; background:transparent;
-  font-weight:700; font-size:18px; color:#e5e7eb;
-}
-#drvHistModal .tpl-day.muted { opacity:.35; }
-#drvHistModal .tpl-day.active { background:#2563eb; color:#fff; border-color:#2563eb; }
-#drvHistModal .jobs-pill {
-  position:absolute; left:16px; bottom:14px;
-  background: linear-gradient(135deg,#2563eb,#1d4ed8);
-  color:#fff; border:1px solid rgba(147,197,253,.6);
-  padding:8px 12px; font-weight:800; font-size:14px; border-radius:999px;
-  box-shadow:0 8px 20px rgba(0,0,0,.35); pointer-events:none;
-}
-#drvHistModal .tpl-footer {
-  margin-top: 12px; display:flex; justify-content:flex-end;
-}
-#drvHistModal .tpl-export {
-  background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:0;
-  border-radius: 12px; padding: 10px 14px; font-weight:800;
-}
-
-
-#drvHistModal .tpl-footer{ display:flex; justify-content:space-between; align-items:center; }
-#drvHistModal .tpl-close{
-  background:#6b7280; color:#fff; border:0; border-radius:12px; padding:10px 14px; font-weight:800;
-}
-#drvHistModal .tpl-spacer{ width:120px; min-width:120px; height:1px; }
-
-/* Hide any previous calendar/list inside the modal so only the template shows */
-#drvHistModal .dh-cal, #drvHistModal .dh-list, #drvHistModal #dh_table_wrap, 
-#drvHistModal .calendar, #drvHistModal .dh-extra { display:none !important; }
-
 </style>
 
   <meta charset="utf-8" />
@@ -165,12 +98,15 @@ window.addEventListener('DOMContentLoaded', function(){
     sel.innerHTML = '<option>Job # CCL-5001</option>';
   }
   const setText = (id, v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
-  setText('f_from', 'Long Beach Port');
-  setText('f_loadin', 'Yusen Logistics ( Torrance)');
+  setText('f_from', 'Yusen Logistics ( Torrance)');
+  setText('f_loadin', 'Long Beach Port');
   setText('f_container', 'TCLU2948209');
   setText('f_appt','Empty');
-  setText('f_window', '08–09 AM');
+  setText('f_window','8:00 AM');
   const instr = document.getElementById('f_instruction'); if(instr) instr.textContent='Chassis back to Compton yard';
+  setText('f_seal','—');
+  setText('f_import_export','Export');
+  setText('f_window','8:00 AM');
   const bk = document.getElementById('f_bk_input'); if(bk && !bk.value) bk.value='';
 
   // Modal plumbing
@@ -295,7 +231,7 @@ window.addEventListener('DOMContentLoaded', function(){
   -webkit-tap-highlight-color: transparent !important;
   touch-action: manipulation !important;
 }
-#menuBtn:active { transform: scale(0.66); }
+#menuBtn:active { transform: scale(0.98); }
 #menuBtn:focus, #menuBtn:focus-visible { outline: none !important; box-shadow: none !important; }
 
 /* Slightly thicker lines for better visibility */
@@ -449,17 +385,17 @@ html, body, .iphone, .screen, #sec-assignment, .brand-grad {
   </div>
   <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm">
     <div class="text-xs text-slate-400 mb-1">BK # / PIN</div>
-    <div class="font-semibold" id="f_seal">—</div>
+    <div class="font-semibold" id="f_seal">1015</div>
   </div>
   <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm">
     <div class="text-xs text-slate-400 mb-1">Import / Export</div>
-    <div class="font-semibold" id="f_import_export">—</div>
+    <div class="font-semibold" id="f_import_export">Export</div>
   </div>
 
   <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm"><div class="text-xs text-slate-400 mb-1">Seal #</div><input id="f_bk_input" type="text" inputmode="numeric" pattern="\d*" class="bk-input w-full font-semibold bg-transparent text-slate-100 focus:outline-none focus:ring-0" placeholder="Enter Seal #"/></div>
   <div class="bg-slate-800 rounded-xl p-2 border border-slate-600 shadow-sm">
-    <div class="text-xs text-slate-400 mb-1">Window</div>
-    <div class="font-semibold" id="f_window">—</div>
+    <div class="text-xs text-slate-400 mb-1">Appointment</div>
+    <div class="font-semibold" id="f_window">10:00 AM</div>
   </div>
 </div>
             <div class="bg-slate-800 rounded-xl p-4 border border-slate-700 text-sm"><div class="text-xs text-slate-400 mb-1">Instruction</div><div class="font-semibold" id="f_instruction">—</div></div>
@@ -524,7 +460,7 @@ html, body, .iphone, .screen, #sec-assignment, .brand-grad {
 
     const btnBegin=document.getElementById('btnBegin');btnBegin.addEventListener('click',()=>{secShift.classList.add('hidden');secAssign.classList.remove('hidden');populateAssignments()});
 
-    const assignments=[{id:'CCL-5001',from:'Long Beach Port',loadin:'Yusen Logistics (Torrance)',container:'TCLU2948209',appt:'Empty',bk:'',instruction:'Chassis back to Compton yard'},{id:'CCL-5002',from:'LBCT',loadin:'Evergreen',container:'EGLV1234567',appt:'Load',bk:'BK998877',instruction:'Return chassis to Wilmington yard'}];
+    const assignments=[{id:'CCL-5001',from:'Yusen Logistics (Torrance)',loadin:'Long Beach Port',container:'TCLU2948209',appt:'Empty',bk:'1015',window:'8:00 AM',instruction:'Chassis back to Compton yard'},{id:'CCL-5002',from:'Long Beach Port',loadin:'Evergreen',container:'EGLV1234567',appt:'Load',bk:'6798',window:'10:00 AM',instruction:'Return chassis to Wilmington yard'}];
     const assignmentSelect=document.getElementById('assignmentSelect');const fields={from:document.getElementById('f_from'),loadin:document.getElementById('f_loadin'),container:document.getElementById('f_container'),appt:document.getElementById('f_appt'),bk: document.getElementById('f_bk_input'),window:document.getElementById('f_window'),instruction:document.getElementById('f_instruction')};
     function populateAssignments(){assignmentSelect.innerHTML=assignments.map((a,i)=>`<option value="${i}">Job # ${a.id}</option>`).join('');setAssignment(0)}
     function setAssignment(i){
@@ -541,7 +477,10 @@ html, body, .iphone, .screen, #sec-assignment, .brand-grad {
   setVal(fields.bk, a.bk);
   setVal(fields.window, a.window);
   setVal(fields.instruction, a.instruction);
+  try { var sealEl=document.getElementById('f_seal'); if(sealEl){ sealEl.textContent=(a.bk&&a.bk.trim())?a.bk:'—'; } } catch(e){}
+  try { var sealInput=document.getElementById('f_bk_input'); if(sealInput){ sealInput.value=''; } } catch(e){}
 }
+
 
     assignmentSelect.addEventListener('change',e=>setAssignment(e.target.value));
   </script>
@@ -646,7 +585,7 @@ html, body, .iphone, .screen, #sec-assignment, .brand-grad {
     if(current === '—' || current === '') valueEl.textContent = val;
   }
   document.addEventListener('DOMContentLoaded', function(){
-    setByLabel('Window', rand(windows));
+    setByLabel('Appointment', '8:00 AM');
     setByLabel('Instruction', rand(instructions));
   });
 })();
@@ -1036,7 +975,7 @@ document.addEventListener('keydown', function(ev){
   }
   function handleComplete(){
     var jobId=getJobId(); if(!jobId){toast('No job selected'); return;}
-    confirmBox('Complete Job?','Notify the dispatcher. This Job #'+jobId+' will move from “In-Progress” to “Completed”.',function(){
+    confirmBox('Complete Job?','Notify the dispatcher. Job #'+jobId+' is now Complete.',function(){
       if(window.__updateJobCompleted){ try{window.__updateJobCompleted(jobId);}catch(e){} }
       try{ window.dispatchEvent(new CustomEvent('job:completed',{detail:{jobId:jobId}})); }catch(e){}
       toast('Dispatcher notified — moved to Completed');
@@ -1969,7 +1908,7 @@ html { overflow-anchor: none !important; }
 <script>
 (function(){
   const ORIGIN_ADDR = ", 415 W Ocean Blvd, Long Beach, CA 90802";
-  const DEST_ADDR   = "2350 E Dominguez St, Carson, CA 90810"; // Yusen Logistics
+  const DEST_ADDR   = "415 W Ocean Blvd, Long Beach, CA 90802"; // Long Beach Port
 
   function setDemoVerbiage(){
     const fromEl = document.getElementById('f_from');
@@ -2114,1455 +2053,88 @@ html { overflow-anchor: none !important; }
   window.getToAddress = getToAddress;
 })();
 </script>
-<!-- Driver History Add-on (v4) : compressed modal + custom large calendar + demo seed -->
-<style>
-.dh-menu-item{display:block;padding:14px 18px;border-top:1px solid rgba(255,255,255,.08);font-weight:800;text-align:center;cursor:pointer}
-#drvHistModal{font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial}
-#drvHistModal .dh-card{background:#0f172a;border:1px solid #334155;border-radius:11px;padding:10px;width:min(72vw,360px);max-height:62vh;box-shadow:0 24px 60px rgba(0,0,0,.4);color:#e5e7eb;display:flex;flex-direction:column;gap:8px}
-#drvHistModal .dh-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
-#drvHistModal h3{font-size:16px;font-weight:800;margin:0}
-#drvHistModal #dh_close{background:#475569;border:none;color:#fff;border-radius:10px;padding:6px 10px}
-#drvHistModal label{font-size:12px;color:#94a3b8;margin-top:2px}
-#drvHistModal #dh_table_wrap{border:1px solid #334155;border-radius:12px;overflow:auto;max-height:36vh}
-#drvHistModal #dh_export{background:#2563eb;border:none;color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
-.dh-cal{user-select:none;background:#0b1220;border:1px solid #334155;border-radius:12px;padding:8px}
-.dh-cal .dh-cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.dh-cal .dh-cal-head button{background:#1f2937;border:1px solid #334155;color:#e5e7eb;border-radius:10px;padding:6px 10px;font-weight:600}
-.dh-cal .dh-cal-title{font-weight:800}
-.dh-cal .dh-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.dh-cal .dh-cell{height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #334155;border-radius:10px;font-size:18px;color:#e5e7eb}
-.dh-cal .dh-cell.muted{color:#64748b}
-.dh-cal .dh-cell.sel{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:800}
-.dh-cal .dh-dow{font-size:12px;color:#94a3b8;text-align:center;margin-bottom:4px}
-@media print {
-  body *{visibility:hidden !important;}
-  #dh_print_area, #dh_print_area *{visibility:visible !important;}
-  #dh_print_area{position:fixed;left:0;top:0;right:0;padding:20px;background:#fff;color:#000;}
-  table{width:100%;border-collapse:collapse;font:14px system-ui,-apple-system,Segoe UI,Roboto;}
-  th,td{border:1px solid #999;padding:6px 8px;text-align:left;} th{font-weight:700;}
-}
-</style>
+
 <script>
+// --- Seal # persistence (per Job) ---
 (function(){
-  function $(sel,root){ return (root||document).querySelector(sel); }
-  function $all(sel,root){ return Array.from((root||document).querySelectorAll(sel)); }
-  function text(el){ return (el && (el.value||el.textContent||"")).toString().trim(); }
-  function esc(s){ return String(s||"").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]||m)); }
-  function toast(msg){ try{ const t=document.createElement('div'); t.textContent=msg; t.style.cssText="position:fixed;left:50%;top:20px;transform:translateX(-50%);background:#111827;color:#fff;padding:8px 12px;border-radius:10px;border:1px solid #374151;z-index:999999;font:600 13px system-ui,-apple-system;"; document.body.appendChild(t); setTimeout(()=>t.remove(),1800);}catch(e){alert(msg);} }
-  function getJobId(){ const ids=['jobId','jobID','lblJobId','lblJobID','currentJobId','selectedJobId']; for(const id of ids){ const el=document.getElementById(id); if(el&&text(el)) return text(el).replace(/^Job\s*#\s*/i,''); } let c=$all('*').map(n=>n.textContent||'').find(t=>/Job\s*#\s*[A-Z]*-?\d{3,,}/i.test(t)); if(c){ const m=c.match(/Job\s*#\s*([A-Z]*-?\d{3,})/i); if(m) return m[1]; } return ''; }
-  function getCurrentDriverId(){ const el=$('#lblEmpId')||$('#driverId')||$('#currentDriver')||$('#lblDriver'); return (el?text(el):'DEMO').trim(); }
-  function getField(ids){ for(const id of ids){ const el=document.getElementById(id); if(el&&text(el)) return text(el); } return ''; }
-  function getJobContext(){ return { job:getJobId(), from:getField(['f_from','fromVal','from','lblFrom']), to:getField(['f_loadin','toVal','to','lblTo']), container:getField(['f_container','container','containerNo','lblContainer']), loadEmpty:getField(['f_appt','loadEmpty','loadStatus','lblLoadEmpty']), driverId:getCurrentDriverId() }; }
-  const STORAGE_KEY='driver_history';
-  function saveHistoryRecord(rec){ try{ const arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); arr.push(rec); localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }catch(e){} }
-  function readHistory(dateStr, driverId){ try{ const arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); return arr.filter(r=>r.driverId===driverId && r.date===dateStr); }catch(e){ return []; } }
-  (function seed(){
+  function getCurrentJobId(){
     try{
-      const arr=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
-      if(arr.length>0) return;
-      const me=getCurrentDriverId();
-      const today=new Date();
-      const d0=today.toISOString().slice(0,10);
-      const d1=new Date(today.getTime()-86400000).toISOString().slice(0,10);
-      const sample=[
-        {date:d0,driverId:me,job:'CCL-5009',from:'Port of Long Beach',to:'Yusen Logistics (Torrance)',container:'MSCU1234567',loadEmpty:'Load'},
-        {date:d0,driverId:me,job:'CCL-5010',from:'SSA Terminal',to:'Amazon LGB3',container:'CMAU7654321',loadEmpty:'Empty'},
-        {date:d1,driverId:me,job:'CCL-5007',from:'Pier E',to:'Target RDC',container:'OOLU1122334',loadEmpty:'Load'},
-        {date:d1,driverId:me,job:'CCL-5008',from:'LBCT',to:'Walmart DC',container:'TRHU9988776',loadEmpty:'Empty'}
-      ];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sample));
-    }catch(e){}
-  })();
-
-  window.__saveDriverHistory=function(){ const ctx=getJobContext(); const today=new Date().toISOString().slice(0,10); const rec={date:today,driverId:ctx.driverId,job:ctx.job,from:ctx.from,to:ctx.to,container:ctx.container,loadEmpty:ctx.loadEmpty}; if(!rec.job){ toast('No job selected'); return false; } saveHistoryRecord(rec); return true; };
-  window.addEventListener('job:completed', function(){ window.__saveDriverHistory(); });
-  document.addEventListener('click', function(ev){ const el=ev.target.closest?ev.target.closest('.menu-item'):null; const label=(ev.target&&(ev.target.innerText||'')).trim().toLowerCase(); if(el && (el.dataset.action==='complete' || label==='complete')){ setTimeout(()=>window.__saveDriverHistory(), 500); } }, true);
-
-  function addHistoryMenuItemIfNeeded(){
-    const sheet=document.getElementById('menuSheet') || document.querySelector('.hamburger-menu, .menu-sheet'); if(!sheet) return;
-    const list=sheet.querySelector('ul, .list, .menu-list, nav, .sheet-body') || sheet; if(!list) return;
-    if(list.querySelector('[data-action="history"]')) return;
-    const item=document.createElement('div');
-    item.className=(list.querySelector('.menu-item')?'menu-item':'dh-menu-item');
-    item.textContent='Driver History'; item.dataset.action='history';
-    const children=Array.from(list.children);
-    const findByText=txt=>children.find(c=> (c.innerText||'').trim().toLowerCase()===txt);
-    const breakDown=findByText('break down'); const endTrip=findByText('end trip');
-    if(breakDown && breakDown.nextSibling){ list.insertBefore(item, breakDown.nextSibling); }
-    else if(endTrip){ list.insertBefore(item, endTrip); } else { list.appendChild(item); }
+      var sel = document.getElementById('assignmentSelect');
+      if(!sel) return '';
+      var opt = sel.options[sel.selectedIndex];
+      var t = (opt && (opt.textContent || opt.innerText) || '').trim();
+      // Try common patterns: "Job # CCL-5001 • ...", "CCL-5001", etc.
+      var m = /Job\s*#\s*([A-Za-z0-9\-]+)/.exec(t) || /(^|\s)([A-Za-z0-9\-]{3,})($|\s)/.exec(t);
+      return (m && (m[1] || m[2])) || '';
+    }catch(e){ return ''; }
   }
-  const mo=new MutationObserver(()=>addHistoryMenuItemIfNeeded());
-  mo.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['class','hidden','style']});
-  document.addEventListener('DOMContentLoaded', addHistoryMenuItemIfNeeded);
-
-  function fmt(y,m,d){ const mm=('0'+(m+1)).slice(-2), dd=('0'+d).slice(-2); return y+'-'+mm+'-'+dd; }
-  function monthName(i){ return new Date(2000,i,1).toLocaleString(undefined,{month:'short'}); }
-  function buildCalendar(container, value){
-    container.innerHTML='';
-    const sel = value ? new Date(value) : new Date();
-    const state = { y: sel.getFullYear(), m: sel.getMonth(), d: sel.getDate() };
-
-    const head = document.createElement('div');
-    head.className='dh-cal-head';
-    head.innerHTML = '<button data-nav="-1">◀</button>'
-                   + '<div class="dh-cal-title"></div>'
-                   + '<button data-nav="1">▶</button>';
-    container.appendChild(head);
-
-    const dowWrap=document.createElement('div'); dowWrap.className='dh-grid';
-    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(s=>{ const el=document.createElement('div'); el.className='dh-dow'; el.textContent=s; dowWrap.appendChild(el); });
-    container.appendChild(dowWrap);
-
-    const grid = document.createElement('div'); grid.className='dh-grid'; container.appendChild(grid);
-
-    function render(){
-      $('.dh-cal-title',container).textContent = monthName(state.m)+' '+state.y;
-      grid.innerHTML='';
-      const first=new Date(state.y,state.m,1);
-      const startDay=first.getDay();
-      const daysInMonth=new Date(state.y,state.m+1,0).getDate();
-      const prevDays=new Date(state.y,state.m,0).getDate();
-
-      for(let i=startDay-1;i>=0;i--){ const d=prevDays - i; const cell=document.createElement('div'); cell.className='dh-cell muted'; cell.textContent=d; grid.appendChild(cell); }
-      for(let d=1; d<=daysInMonth; d++){ const cell=document.createElement('div'); cell.className='dh-cell'; cell.textContent=d; if(d===state.d) cell.classList.add('sel'); cell.addEventListener('click', ()=>{ state.d=d; select(); }); grid.appendChild(cell); }
-      const cellsNeeded = 42 - grid.children.length;
-      for(let i=1;i<=cellsNeeded;i++){ const cell=document.createElement('div'); cell.className='dh-cell muted'; cell.textContent=i; grid.appendChild(cell); }
+  function saveSealForJob(jobId, seal){
+    try{ if(jobId) localStorage.setItem('seal:'+jobId, seal || ''); }catch(e){}
+  }
+  function loadSealForJob(jobId){
+    try{ return (jobId && localStorage.getItem('seal:'+jobId)) || ''; }catch(e){ return ''; }
+  }
+  function restoreSealIntoInput(){
+    var sealInput = document.getElementById('f_bk_input');
+    if(!sealInput) return;
+    var jid = getCurrentJobId();
+    var saved = loadSealForJob(jid);
+    if(saved !== ''){
+      sealInput.value = saved;
+    } else {
+      // If nothing saved, do not overwrite whatever user typed during this session.
+      // (But if the app cleared it on switch, it will simply remain blank)
     }
-    function nav(dir){ state.m += dir; if(state.m<0){ state.m=11; state.y--; } if(state.m>11){ state.m=0; state.y++; } state.d=1; render(); }
-    function select(){ const dateStr = fmt(state.y,state.m,state.d); container.dispatchEvent(new CustomEvent('date:selected',{detail:{date:dateStr}})); $all('.dh-cell',container).forEach(c=>c.classList.remove('sel')); const idx = Array.from(grid.children).findIndex(c=>!c.classList.contains('muted') && c.textContent==state.d); if(idx>=0) grid.children[idx].classList.add('sel'); }
-    head.addEventListener('click', (e)=>{ const b=e.target.closest('button'); if(!b) return; nav(parseInt(b.dataset.nav||'0',10)); });
-    render(); setTimeout(select,0);
   }
-
-  function ensureModal(){
-    let m=document.getElementById('drvHistModal'); if(m) return m;
-    m=document.createElement('div'); m.id='drvHistModal'; m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:100003;';
-    m.innerHTML='<div class="dh-card">'
-      + '<div class="dh-row"><h3>Driver History</h3><button id="dh_close">Close</button></div>'
-      + '<label>Select date</label>'
-      + '<div id="dh_calendar" class="dh-cal"></div>'
-      + '<div id="dh_table_wrap"></div>'
-      + '<div style="display:flex;gap:8px;justify-content:flex-end;"><button id="dh_export">Export PDF</button></div>'
-      + '</div>';
-    document.body.appendChild(m);
-    return m;
-  }
-
-  function renderTable(rows){
-    const wrap=$('#dh_table_wrap');
-    if(!rows.length){ wrap.innerHTML='<div style="padding:10px;color:#94a3b8">No records for this date.</div>'; return; }
-    let html='<div id="dh_print_area"><table><thead><tr><th>Job #</th><th>From</th><th>To</th><th>Container #</th><th>Load / Empty</th></tr></thead><tbody>';
-    for(const r of rows){ html+='<tr><td>Job # '+esc(r.job)+'</td><td>'+esc(r.from)+'</td><td>'+esc(r.to)+'</td><td>'+esc(r.container)+'</td><td>'+esc(r.loadEmpty)+'</td></tr>'; }
-    html+='</tbody></table></div>'; wrap.innerHTML=html;
-  }
-
-  function openHistory(){
-    const m=ensureModal(); const cal=$('#dh_calendar',m); const today=new Date().toISOString().slice(0,10);
-    buildCalendar(cal, today);
-    function refresh(dateStr){ renderTable(readHistory(dateStr, getCurrentDriverId())); }
-    cal.addEventListener('date:selected', e=> refresh(e.detail.date));
-    refresh(today);
-    $('#dh_export',m).onclick=function(){ const area=document.getElementById('dh_print_area'); if(!area){ alert('Nothing to export'); return; } document.body.appendChild(area); window.print(); $('#dh_table_wrap').appendChild(area); };
-    $('#dh_close',m).onclick=function(){ m.remove(); closeMenu(); };
-  }
-  function closeMenu(){ const sheet=document.getElementById('menuSheet')||document.querySelector('.hamburger-menu, .menu-sheet'); if(!sheet) return; sheet.classList.remove('show'); sheet.setAttribute('hidden','hidden'); }
-
-  document.addEventListener('click', function(e){ const item=e.target.closest && e.target.closest('[data-action="history"], .dh-menu-item'); if(!item) return; e.preventDefault(); e.stopPropagation(); try{closeMenu&&closeMenu();}catch(_){ } openHistory(); }, true);
-})();
-</script>
-
-<script>
-(function(){
-  function fmtMonth(date){
-    return date.toLocaleString(undefined,{month:"short", year:"numeric"}).replace('.', '');
-  }
-  function startOfMonth(date){ return new Date(date.getFullYear(), date.getMonth(), 1); }
-  function endOfMonth(date){ return new Date(date.getFullYear(), date.getMonth()+1, 0); }
-  function addMonths(date, n){ return new Date(date.getFullYear(), date.getMonth()+n, 1); }
-  function buildGrid(date){
-    const first = startOfMonth(date);
-    const last  = endOfMonth(date);
-    const startOffset = first.getDay(); // 0=Sun..6=Sat
-    const totalDays = last.getDate();
-    const prevLast = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
-
-    const cells = [];
-    // prev-month tail
-    for(let i=startOffset-1;i>=0;i--){ cells.push({d: prevLast - i, muted:true, prev:true}); }
-    // this month
-    for(let d=1; d<=totalDays; d++){ cells.push({d, muted:false}); }
-    // next-month head
-    while(cells.length % 7 !== 0) { cells.push({d: cells.length % 7 + 1, muted:true, next:true}); }
-    // ensure 6 rows (42 cells)
-    while(cells.length < 42) { cells.push({d: cells.length % 31 + 1, muted:true, next:true}); }
-    return cells;
-  }
-  function jobCountFor(y,m,d){
-    // Saturday => 0, weekdays => demo 1..4 cycling
-    const dt = new Date(y,m,d);
-    const dow = dt.getDay();
-    if (dow === 6) return 0;
-    return (d % 4) + 1;
-  }
-  function render(root){
-    if (!root) return;
-    let card = root.querySelector('.tpl-cal-card');
-    if (!card){
-      card = document.createElement('div');
-      card.className = 'tpl-cal-card';
-      card.innerHTML = '<div class="tpl-head">'+
-        '<div class="tpl-nav"><button class="tpl-btn" data-nav="-1">◀</button></div>'+
-        '<div class="tpl-month"></div>'+
-        '<div class="tpl-nav"><button class="tpl-btn" data-nav="1">▶</button></div>'+
-        '</div>'+
-        '<div class="tpl-grid">'+
-          '<div class="tpl-dow"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>'+
-          '<div class="tpl-days"></div>'+
-        '</div>'+
-        '<div class="tpl-footer"><div class="tpl-spacer"></div><button class="tpl-close" id="drvHistClose">Close</button><button class="tpl-export" id="drvHistExport">Export PDF</button></div>'+
-        '<div class="jobs-pill">Job # - 0</div>';
-      root.appendChild(card);
-    }
-    let state = root.__tpl_date || new Date();
-    function update(){
-      const monthEl = card.querySelector('.tpl-month');
-      const daysEl  = card.querySelector('.tpl-days');
-      monthEl.textContent = state.toLocaleString(undefined, {month:"short", year:"numeric"});
-      const cells = buildGrid(state);
-      daysEl.innerHTML = '';
-      cells.forEach(c=>{
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'tpl-day' + (c.muted ? ' muted':'') ;
-        b.textContent = c.d;
-        b.addEventListener('click', ()=>{
-          daysEl.querySelectorAll('.tpl-day').forEach(x=>x.classList.remove('active'));
-          b.classList.add('active');
-          const count = jobCountFor(state.getFullYear(), state.getMonth(), parseInt(b.textContent, 10));
-          const pill = card.querySelector('.jobs-pill'); pill.textContent = 'Job # - ' + count;
-        });
-        daysEl.appendChild(b);
-      });
-    }
-    card.addEventListener('click', (e)=>{
-      const btn = e.target.closest('.tpl-btn');
-      if(!btn) return;
-      const delta = parseInt(btn.dataset.nav, 10) || 0;
-      root.__tpl_date = addMonths(root.__tpl_date || new Date(), delta);
-      state = root.__tpl_date;
-      update();
+  function attachSealAutoSave(){
+    var sealInput = document.getElementById('f_bk_input');
+    if(!sealInput) return;
+    var handler = function(){
+      var jid = getCurrentJobId();
+      var val = (sealInput.value || '').trim();
+      saveSealForJob(jid, val);
+    };
+    ['change','blur','input'].forEach(function(evt){
+      sealInput.addEventListener(evt, handler, {passive:true});
     });
-    update();
-  }
-  const obs = new MutationObserver(function(list){
-    list.forEach(m=>{
-      (m.addedNodes||[]).forEach(n=>{
-        if(n.id === 'drvHistModal') render(n);
-      });
-    });
-  });
-  try{ obs.observe(document.body, {childList:true, subtree:true}); }catch(_){}
-  // In case modal already exists
-  const now = document.getElementById('drvHistModal'); if (now) render(now);
-})();
-</script>
-
-
-<style>
-#drvHistModal { align-items:center; justify-content:center; }
-#drvHistModal .tpl-cal-card { position:relative; width:92vw; max-width:520px;
-  background:#0b1220; color:#dbeafe; border:1px solid #334155; border-radius:16px;
-  box-shadow:0 22px 60px rgba(0,0,0,.45); padding:16px; transform:scale(0.66); transform-origin:center; }
-#drvHistModal .tpl-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
-#drvHistModal .tpl-month{font-weight:800; font-size:20px; color:#e5e7eb;}
-#drvHistModal .tpl-btn{width:36px; height:36px; display:flex; align-items:center; justify-content:center;
-  border-radius:12px; border:1px solid #334155; background:#111827; color:#e5e7eb;}
-#drvHistModal .tpl-grid{border:1px solid #334155; border-radius:12px; padding:12px; background:#0f172a;}
-#drvHistModal .tpl-dow{display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:10px;
-  color:#94a3b8; font-weight:600; font-size:13px; text-align:center;}
-#drvHistModal .tpl-days{display:grid; grid-template-columns:repeat(7,1fr); gap:10px;}
-#drvHistModal .tpl-day{height:48px; display:flex; align-items:center; justify-content:center;
-  border-radius:12px; border:1px solid #334155; background:transparent; font-weight:700; font-size:18px; color:#e5e7eb;}
-#drvHistModal .tpl-day.muted{opacity:.35;}
-#drvHistModal .tpl-day.active{background:#2563eb; color:#fff; border-color:#2563eb;}
-#drvHistModal .tpl-footer{margin-top:12px; display:flex; justify-content:flex-end;}
-#drvHistModal .tpl-export{background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:0; border-radius:12px; padding:10px 14px; font-weight:800;}
-
-
-#drvHistModal .tpl-footer{ display:flex; justify-content:space-between; align-items:center; }
-#drvHistModal .tpl-close{
-  background:#6b7280; color:#fff; border:0; border-radius:12px; padding:10px 14px; font-weight:800;
-}
-#drvHistModal .tpl-spacer{ width:120px; min-width:120px; height:1px; }
-
-#drvHistModal .jobs-pill{position:absolute; left:16px; bottom:14px; background:linear-gradient(135deg,#2563eb,#1d4ed8);
-  color:#fff; border:1px solid rgba(147,197,253,.6); padding:8px 12px; font-weight:800; font-size:14px; border-radius:999px; box-shadow:0 8px 20px rgba(0,0,0,.35); pointer-events:none;}
-/* Hide any legacy content inside modal, just in case */
-#drvHistModal .dh-cal, #drvHistModal #dh_table_wrap, #drvHistModal .dh-list, #drvHistModal .calendar, #drvHistModal .dh-extra { display:none !important; }
-</style>
-
-<script>
-(function(){
-  // Build single calendar card markup
-  function calendarCardHTML(){
-    return ''+
-    '<div class="tpl-cal-card">' +
-      '<div class="tpl-head">' +
-        '<button class="tpl-btn" data-nav="-1" aria-label="Previous Month">◀</button>' +
-        '<div class="tpl-month">Sep 2025</div>' +
-        '<button class="tpl-btn" data-nav="1" aria-label="Next Month">▶</button>' +
-      '</div>' +
-      '<div class="tpl-grid">' +
-        '<div class="tpl-dow"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>' +
-        '<div class="tpl-days"></div>' +
-      '</div>' +
-      '<div class="tpl-footer"><div class="tpl-spacer"></div><button class="tpl-close" id="drvHistClose">Close</button><button class="tpl-export" id="drvHistExport">Export PDF</button></div>' +
-      '<div class="jobs-pill">Job # - 0</div>' +
-    '</div>';
   }
 
-  function ensureSingleCalendar(modal){
-    if (!modal) return;
-    // Wipe any previous/legacy markup inside Driver History modal
-    modal.innerHTML = calendarCardHTML();
-    modal.classList.add('tpl-mounted'); // flag
-  }
-
-  function startCalendar(modal){
-    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
-    function addMonths(d, n){ return new Date(d.getFullYear(), d.getMonth()+n, 1); }
-    function buildGrid(date){
-      const first = new Date(date.getFullYear(), date.getMonth(), 1);
-      const last  = endOfMonth(date);
-      const startOffset = first.getDay(); // 0=Sun..6=Sat
-      const totalDays = last.getDate();
-      const prevLast = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
-      const cells = [];
-      for(let i=startOffset-1;i>=0;i--){ cells.push({d: prevLast - i, muted:true}); }
-      for(let d=1; d<=totalDays; d++){ cells.push({d}); }
-      while(cells.length % 7 !== 0) { cells.push({d: cells.length % 31 + 1, muted:true}); }
-      while(cells.length < 42) { cells.push({d: cells.length % 31 + 1, muted:true}); }
-      return cells;
-    }
-    function jobCountFor(y,m,d){
-      const dow = new Date(y,m,d).getDay();
-      if (dow === 6) return 0; // Saturday rule
-      return (d % 4) + 1;      // demo logic until wired to Firestore
-    }
-
-    const card = modal.querySelector('.tpl-cal-card');
-    const monthEl = card.querySelector('.tpl-month');
-    const daysEl  = card.querySelector('.tpl-days');
-    let state = new Date();
-
-    function render(){
-      monthEl.textContent = state.toLocaleString(undefined, {month:"short", year:"numeric"});
-      const cells = buildGrid(state);
-      daysEl.innerHTML = '';
-      cells.forEach(c=>{
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'tpl-day' + (c.muted ? ' muted':'');
-        b.textContent = c.d;
-        b.addEventListener('click', ()=>{
-          daysEl.querySelectorAll('.tpl-day').forEach(x=>x.classList.remove('active'));
-          b.classList.add('active');
-          const count = jobCountFor(state.getFullYear(), state.getMonth(), parseInt(b.textContent,10));
-          card.querySelector('.jobs-pill').textContent = 'Job # - ' + count;
-        });
-        daysEl.appendChild(b);
-      });
-    }
-
-    card.addEventListener('click', (e)=>{
-      const btn = e.target.closest('.tpl-btn');
-      if(!btn) return;
-      const delta = parseInt(btn.dataset.nav,10) || 0;
-      state = addMonths(state, delta);
-      render();
-    });
-
-    render();
-  }
-
-  const obs = new MutationObserver(function(list){
-    list.forEach(m=>{
-      (m.addedNodes||[]).forEach(n=>{
-        if (n.id === 'drvHistModal' && !n.classList.contains('tpl-mounted')){
-          // Center modal container
-          n.style.display = 'flex';
-          n.style.alignItems = 'center';
-          n.style.justifyContent = 'center';
-          ensureSingleCalendar(n);
-          startCalendar(n);
-        }
-      });
-    });
-  });
-  try { obs.observe(document.body, {childList:true, subtree:true}); } catch(e){}
-
-  // In case modal is already present
-  const existing = document.getElementById('drvHistModal');
-  if (existing && !existing.classList.contains('tpl-mounted')){
-    existing.style.display = 'flex';
-    existing.style.alignItems = 'center';
-    existing.style.justifyContent = 'center';
-    ensureSingleCalendar(existing);
-    startCalendar(existing);
-  }
-})();
-</script>
-
-
-<!-- jsPDF & html2canvas for client-side PDF generation -->
-<script>
-// Delegated click so Export PDF works even if the button is injected later
-(function(){
-  function isExportButton(el){
-    if(!el) return false;
-    if (el.matches && (el.matches('.tpl-export') || el.matches('#dh_export_pdf') || el.matches('#exportPdfBtn'))) return true;
-    return false;
-  }
-  document.addEventListener('click', function(e){
-    var btn = e.target.closest && e.target.closest('.tpl-export, #dh_export_pdf, #exportPdfBtn');
-    if (!btn) return;
-    e.preventDefault(); e.stopPropagation();
-    if (window.makePdf) { try { window.makePdf(); } catch(_)
-
-document.addEventListener('click', function(e){
-  var btn = e.target.closest && e.target.closest('.tpl-close, #drvHistClose');
-  if(!btn) return;
-  e.preventDefault(); e.stopPropagation();
-  var m = document.getElementById('drvHistModal');
-  if(m){ try{ m.remove(); }catch(_) { m.style.display='none'; } }
-  try{ if (typeof closeMenu === 'function') closeMenu(); } catch(_) {}
-}, true);
-{} return; }
-    // If makePdf is encapsulated, try to locate the function we injected
-    try {
-      var maker = (function(){
-        for (var k in window){
-          if (/^makePdf$/.test(k) && typeof window[k]==='function') return window[k];
-        }
-        return null;
-      })();
-      if (maker) maker();
-    } catch(_){}
-  }, true);
-})();
-</script>
-
-
-<script>
-// --- Robust Export PDF wiring & library loader ---
-(function(){
-  function toast(msg){
+  // Wrap setAssignment (if present) so we can restore the saved Seal after the app switches jobs
+  var _wrapped = false;
+  function wrapSetAssignment(){
+    if(_wrapped) return;
     try{
-      var t=document.createElement('div');
-      t.textContent=msg;
-      t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:#0f172a;color:#fff;border:1px solid #334155;padding:8px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:100000;font:14px system-ui,-apple-system,Segoe UI,Roboto';
-      document.body.appendChild(t); setTimeout(function(){t.remove();},1800);
-    }catch(e){}
-  }
-
-  function loadScript(src){
-    return new Promise(function(res, rej){
-      var s=document.createElement('script'); s.src=src; s.async=true; 
-      s.onload=res; s.onerror=function(){ rej(new Error('Failed to load '+src)); };
-      document.head.appendChild(s);
-    });
-  }
-
-  async function ensureLibs(){
-    if (!window.jspdf || !window.jspdf.jsPDF){
-      try{ await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'); }
-      catch(e){ toast('PDF library failed to load'); throw e; }
-    }
-    if (!window.html2canvas){
-      try{ await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'); }
-      catch(e){ /* not strictly required for table PDF */ }
-    }
-  }
-
-  // Expose a single entry we can call from anywhere
-  window.__exportDriverHistoryPdf = async function(){
-    try{
-      await ensureLibs();
-      if (window.makePdf) { window.makePdf(); return; }
-      // Try to find a nearby function named makePdf inside scripts (closure)
-      try{ if (typeof makePdf==='function'){ makePdf(); return; } }catch(_){}
-      toast('Export function not found');
-    }catch(e){
-      console.warn(e);
-    }
-  };
-
-  // Delegated click: works even if button appears later
-  document.addEventListener('click', function(e){
-    var btn = e.target.closest && e.target.closest('.tpl-export, #dh_export_pdf, #exportPdfBtn');
-    if (!btn) return;
-    e.preventDefault(); e.stopPropagation();
-    window.__exportDriverHistoryPdf();
-  }, true);
-
-document.addEventListener('click', function(e){
-  var btn = e.target.closest && e.target.closest('.tpl-close, #drvHistClose');
-  if(!btn) return;
-  e.preventDefault(); e.stopPropagation();
-  var m = document.getElementById('drvHistModal');
-  if(m){ try{ m.remove(); }catch(_) { m.style.display='none'; } }
-  try{ if (typeof closeMenu === 'function') closeMenu(); } catch(_) {}
-}, true);
-
-
-  // Also bind by button text as a fallback ("Export PDF")
-  document.addEventListener('click', function(e){
-    var el = e.target;
-    if (!el) return;
-    if (/export\s*pdf/i.test(el.textContent||'')){
-      if (el.closest('#drvHistModal')){
-        e.preventDefault(); e.stopPropagation();
-        window.__exportDriverHistoryPdf();
+      if(typeof window.setAssignment === 'function'){
+        var _orig = window.setAssignment;
+        window.setAssignment = function(){
+          var r = _orig.apply(this, arguments);
+          try{ restoreSealIntoInput(); }catch(e){}
+          return r;
+        };
+        _wrapped = true;
       }
+    }catch(e){}
+  }
+
+  // Initialize after DOM is ready
+  function init(){
+    attachSealAutoSave();
+    restoreSealIntoInput();
+    wrapSetAssignment();
+    // Also re-apply on assignmentSelect change (in case setAssignment isn't called)
+    var sel = document.getElementById('assignmentSelect');
+    if(sel && !sel.__sealPersistHooked){
+      sel.addEventListener('change', function(){ setTimeout(restoreSealIntoInput, 0); }, {passive:true});
+      sel.__sealPersistHooked = true;
     }
-  }, true);
-})();
-</script>
-
-
-<script>
-// Force expose makePdf globally if defined in closure
-try {
-  if (typeof makePdf === 'function') {
-    window.makePdf = makePdf;
   }
-} catch(e) {}
-</script>
-
-
-<script id="drvHistExportEnhance">
-(function(){
-  function byId(id){ return document.getElementById(id); }
-  function text(el){ return (el && (el.textContent||'').trim()) || ''; }
-
-  function enhanceCalendar(){
-    var modal = byId('drvHistModal');
-    if(!modal) return;
-    var days = modal.querySelectorAll('.tpl-day');
-    days.forEach(function(d){
-      d.addEventListener('click', function(){
-        days.forEach(function(x){ x.classList.remove('active'); });
-        d.classList.add('active');
-        // store selected day number
-        modal.setAttribute('data-selected-day', text(d));
-      });
-    });
-  }
-
   if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', enhanceCalendar, {once:true});
+    document.addEventListener('DOMContentLoaded', init, {once:true});
   } else {
-    enhanceCalendar();
+    init();
   }
 })();
 </script>
 
-
-
-<script id="drvHistExportHandler">
-(function(){
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-
-  function fmtDate(monthLabel, dayStr){
-    try{
-      if(!monthLabel) return '';
-      const [mon, year] = monthLabel.split(/\s+/);
-      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      const monthIdx = months.indexOf(mon);
-      const d = new Date(parseInt(year,10), monthIdx >= 0 ? monthIdx : 0, parseInt(dayStr||'1',10));
-      const opt = { month: 'short', day: '2-digit', year: 'numeric' };
-      return d.toLocaleDateString('en-US', opt).replace(',', '');
-    }catch(e){ return (monthLabel + (dayStr ? ' ' + dayStr : '')); }
-  }
-
-  function parseSelectedDate(){
-    const modal = $('#drvHistModal');
-    const monthLabel = $('.tpl-month', modal) ? $('.tpl-month', modal).textContent.trim() : '';
-    let day = (modal && modal.getAttribute('data-selected-day')) || '';
-    if(!day){
-      const active = $('.tpl-day.active', modal);
-      if(active) day = active.textContent.trim();
-    }
-    return fmtDate(monthLabel, day);
-  }
-
-  function collectRow(){
-    const sel = $('#assignmentSelect');
-    let job = '';
-    if(sel){
-      const opt = sel.options[sel.selectedIndex];
-      if(opt) job = (opt.textContent||'').replace(/.*?(CCL-\d+)/,'$1');
-    }
-    const from = ($('#f_from')||{}).textContent || '—';
-    const to = ($('#f_loadin')||{}).textContent || '—';
-    const container = ($('#f_container')||{}).textContent || '—';
-    const load = ($('#f_appt')||{}).textContent || '—';
-    return { job: (job||'').trim(), from: from.trim(), to: to.trim(), container: container.trim(), load: load.trim() };
-  }
-
-  function exportDriverHistoryPDF(){
-    const dateTxt = parseSelectedDate() || 'Selected Date';
-    const row  = collectRow();
-    const id   = ($('#lblEmpId')||{}).textContent || '';
-    const name = ($('#assignHeader')||{}).textContent || 'Prime Tech Solutions';
-
-    const { jsPDF } = window.jspdf || {};
-    if (!jsPDF || !window.jspdf || !('autoTable' in (jsPDF.API||{}))) {
-      alert('PDF engine not loaded');
-      return;
-    }
-
-    // US Letter Landscape
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
-
-    // Header
-    const pageW = doc.internal.pageSize.getWidth();
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(16);
-    doc.text(`${name} (${id})`, 40, 48, { baseline: 'top' });
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(12);
-    const dateWidth = doc.getTextWidth(dateTxt);
-    doc.text(dateTxt, pageW - 40 - dateWidth, 48, { baseline: 'top' });
-
-    // Table
-    const head = [["DATE","JOB #","FROM","TO","CONTAINER #","LOAD / EMPTY"]];
-    const body = [[dateTxt, row.job, row.from, row.to, row.container, row.load]];
-
-    doc.autoTable({
-      startY: 80,
-      head: head,
-      body: body,
-      theme: 'grid',
-      styles: { font: 'helvetica', fontSize: 10, cellPadding: 6, lineColor: [120,120,120], lineWidth: 0.2, halign: 'center', valign: 'middle' },
-      headStyles: { fillColor: [31,41,55], textColor: 255, fontStyle: 'bold', halign: 'center', lineColor: [120,120,120], lineWidth: 0.2 },
-      bodyStyles: { textColor: [20,20,20], lineColor: [120,120,120], lineWidth: 0.2 },
-      columnStyles: {
-        0: { halign: 'center', cellWidth: 110 },
-        1: { halign: 'center', cellWidth: 90 },
-        2: { halign: 'left',   cellWidth: 220 },
-        3: { halign: 'left',   cellWidth: 260 },
-        4: { halign: 'center', cellWidth: 120 },
-        5: { halign: 'center', cellWidth: 110 }
-      },
-      didParseCell: function(data){
-        if (data.section === 'head'){
-          data.cell.styles.lineWidthBottom = 0; // avoid double line at header/body boundary
-        }
-        if (data.section === 'body' && data.row.index === 0){
-          data.cell.styles.lineWidthTop = 0.2;  // single separator line
-        }
-      },
-      tableLineColor: [120,120,120],
-      tableLineWidth: 0.2,
-      margin: { top: 60, right: 40, bottom: 40, left: 40 }
-    });
-
-    doc.save(`DriverHistory_${dateTxt.replace(/\s+/g,'_')}.pdf`);
-  }
-
-  function wire(){
-    const btn = document.getElementById('drvHistExport') || Array.from(document.querySelectorAll('#drvHistModal button')).find(b => (b.textContent||'').trim().toLowerCase().includes('export pdf'));
-    if(btn && !btn.__wired){
-      btn.__wired = true;
-      btn.addEventListener('click', function(e){
-        e.preventDefault();
-        exportDriverHistoryPDF();
-      });
-    }
-  }
-  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', wire, {once:true}); } else { wire(); }
-})();
-</script>
-
-
-
-<!-- jsPDF + AutoTable (for landscape PDF with a clean table) -->
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<script>
-// === Driver History: Export PDF (Landscape Template: Employee Name/ID; Date; Table of Jobs) ===
-(function(){
-  function qs(sel, root){ return (root||document).querySelector(sel); }
-  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
-  function text(el){ return (el && (el.textContent || el.value) || '').trim(); }
-
-  // Pull date selected in the Driver History modal (ISO: YYYY-MM-DD)
-  function getSelectedDate(){
-    // Preferred: element that stores ISO date
-    var el = qs('#drvHistModal [data-selected-date]');
-    if (el && text(el)) return text(el);
-
-    // Fallback: infer from active day + month header
-    var active = qs('#drvHistModal .tpl-days .is-selected') || qs('#drvHistModal .tpl-days .is-today');
-    var monthLabel = text(qs('#drvHistModal .tpl-month')); // e.g., "September 2025"
-    var day = active ? text(active) : '';
-    if(!monthLabel || !day) return new Date().toISOString().slice(0,10);
-    try {
-      var dt = new Date(monthLabel + ' ' + day + ' 00:00:00');
-      if(!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
-    } catch(e){}
-    return new Date().toISOString().slice(0,10);
-  }
-
-  function getEmployeeInfo(){
-    return {
-      name: text(qs('#lblEmpName')) || 'Employee',
-      id: text(qs('#lblEmpId')) || 'ID'
-    };
-  }
-
-  // Try to load records from localStorage (saved work history), then fall back to a global 'sample' array if present.
-  function loadHistoryData(){
-    var arr = [];
-    try{
-      var stored = localStorage.getItem('driver_history');
-      if(stored){ arr = JSON.parse(stored) || []; }
-    }catch(e){}
-
-    // If nothing in storage, look for a global "sample" array (used by demo/seed data)
-    try{
-      if((!arr || !arr.length) && window.sample && Array.isArray(window.sample)){
-        arr = window.sample.slice();
-      }
-    }catch(e){}
-    return Array.isArray(arr) ? arr : [];
-  }
-
-  function getCurrentDriverId(){
-    // Look for various labels already in the UI
-    var el = qs('#lblEmpId') || qs('#drvId') || qs('#lblDriver');
-    return (el ? text(el) : 'DEMO').trim();
-  }
-
-  function filterRowsByDateAndDriver(allRows, dateISO, driverId){
-    return allRows.filter(function(r){
-      // normalize keys across record shapes (sample vs saved)
-      var recDate = r.date || r.Date || r.selectedDate || '';
-      var recDriver = r.driverId || r.empId || r.employeeId || '';
-      return (recDate === dateISO) && (!driverId || recDriver === driverId);
-    });
-  }
-
-  function mapRowsForTable(rows){
-    // Normalize to: [Job #, From, To, Container #, Load/Empty]
-    return rows.map(function(r){
-      var job = r.job || r.id || r.jobId || '';
-      var from = r.from || r.origin || '';
-      var to = r.to || r.loadin || r.destination || '';
-      var ctr = r.container || r.containerNo || r.containerId || '';
-      var le  = r.loadEmpty || r.load_status || r.status || '';
-      return [job, from, to, ctr, le];
-    });
-  }
-
-  function buildAndSavePdf(opts){
-    var emp = opts.employee;
-    var dateISO = opts.dateISO;
-    var rows = opts.rows;
-
-    var jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : window.jsPDF;
-    var doc = new jsPDF({orientation:'landscape', unit:'pt', format:'letter'});
-
-    // Header
-    var leftX = 40, topY = 40;
-    doc.setFont('helvetica','bold'); doc.setFontSize(14);
-    doc.text('Driver Daily History', leftX, topY);
-
-    doc.setFont('helvetica','normal'); doc.setFontSize(11);
-    doc.text('Employee Name: ' + (emp.name || ''), leftX, topY + 20);
-    doc.text('Employee ID: '   + (emp.id || ''),   leftX, topY + 38);
-
-    doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    doc.text('Date: ' + dateISO, 720, topY, {align:'right'});
-
-    // Table
-    var head = [['Job #','From','To','Container #','Load/Empty']];
-    var body = rows.length ? rows : [['','','','','']];
-
-    if (doc.autoTable) {
-      doc.autoTable({
-        startY: topY + 60,
-        head: head,
-        body: body,
-        styles: { font:'helvetica', fontSize: 10, cellPadding: 6, lineWidth: 0.5 },
-        headStyles: { fillColor: [20, 63, 163], textColor: 255, halign:'left' },
-        theme: 'grid',
-        margin: {left: 40, right: 40}
-      });
-    } else {
-      // Fallback minimal rendering if autotable failed to load
-      var y = topY + 70;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text(head[0].join('    '), leftX, y);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      y += 18;
-      rows.forEach(function(row){
-        doc.text((row.join('    ')||''), leftX, y);
-        y += 16;
-      });
-    }
-
-    var fname = 'Driver_History_' + dateISO + '.pdf';
-    doc.save(fname);
-  }
-
-  function handleExport(){
-    var dateISO = getSelectedDate();
-    var emp = getEmployeeInfo();
-    var all = loadHistoryData();
-    var rows = filterRowsByDateAndDriver(all, dateISO, getCurrentDriverId());
-    var tableRows = mapRowsForTable(rows);
-    buildAndSavePdf({employee:emp, dateISO:dateISO, rows:tableRows});
-  }
-
-  // Wire the button (works even if created dynamically)
-  document.addEventListener('click', function(ev){
-    var t = ev.target;
-    if (!t) return;
-    if (t.id === 'drvHistExport') {
-      ev.preventDefault();
-      try { handleExport(); } catch(e){ console.error('Export error:', e); }
-    }
-  }, true);
-})();
-</script>
-
-
-<!-- jsPDF + AutoTable (for landscape PDF with a clean table) -->
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<script>
-// === Driver History: Export PDF (Landscape Template; reads VISIBLE UI rows for selected date) ===
-(function(){
-  function qs(sel, root){ return (root||document).querySelector(sel); }
-  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
-  function text(el){ return (el && (el.textContent || el.value) || '').trim(); }
-
-  function getSelectedDate(){
-    var el = qs('#drvHistModal [data-selected-date]');
-    if (el && text(el)) return text(el);
-    var active = qs('#drvHistModal .tpl-days .is-selected') || qs('#drvHistModal .tpl-days .is-today');
-    var monthLabel = text(qs('#drvHistModal .tpl-month'));
-    var day = active ? text(active) : '';
-    if(!monthLabel || !day) return new Date().toISOString().slice(0,10);
-    try {
-      var dt = new Date(monthLabel + ' ' + day + ' 00:00:00');
-      if(!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
-    } catch(e){}
-    return new Date().toISOString().slice(0,10);
-  }
-
-  function getEmployeeInfo(){
-    return {
-      name: text(qs('#lblEmpName')) || 'Employee',
-      id: text(qs('#lblEmpId')) || 'ID'
-    };
-  }
-
-  // 1) PRIMARY SOURCE: parse VISIBLE rows from the Driver History UI for the selected date.
-  // We try to be resilient across different markups.
-  function collectRowsFromUI(){
-    var scope = qs('#drvHistModal') || document;
-    var rows = [];
-
-    // Case A: A table with headers "Job #, From, To, Container #, Load/Empty"
-    var table = qs('table, .job-table, #drvHistTable', scope);
-    if (table) {
-      // Find body rows ignoring headers
-      var trList = qsa('tbody tr', table);
-      if (!trList.length) trList = qsa('tr', table).filter(function(tr){
-        return !qsa('th', tr).length;
-      });
-      trList.forEach(function(tr){
-        var cells = qsa('td, .cell', tr).map(function(td){ return text(td); });
-        if (cells.length >= 5) {
-          rows.push([cells[0], cells[1], cells[2], cells[3], cells[4]]);
-        } else if (cells.length) {
-          // Try to map by data-label attr if present
-          var job = text(qs('[data-label*="Job"]', tr)) || cells[0] || '';
-          var from = text(qs('[data-label*="From"]', tr)) || cells[1] || '';
-          var to   = text(qs('[data-label*="To"]', tr))   || cells[2] || '';
-          var ctr  = text(qs('[data-label*="Container"]', tr)) || cells[3] || '';
-          var le   = text(qs('[data-label*="Load"],[data-label*="Empty"]', tr)) || cells[4] || '';
-          rows.push([job, from, to, ctr, le]);
-        }
-      });
-    }
-
-    // Case B: A list of .job-row items with sub-fields
-    if (!rows.length) {
-      qsa('.job-row, [data-job-row]', scope).forEach(function(row){
-        var job = text(qs('[data-field="job"], .job-id, .job-num', row));
-        var from = text(qs('[data-field="from"], .from', row));
-        var to   = text(qs('[data-field="to"], .to', row));
-        var ctr  = text(qs('[data-field="container"], .container', row));
-        var le   = text(qs('[data-field="loadEmpty"], .load-empty, .loadEmpty', row));
-        if (job || from || to || ctr || le) {
-          rows.push([job, from, to, ctr, le]);
-        }
-      });
-    }
-    return rows;
-  }
-
-  // 2) SECONDARY SOURCE (fallback): localStorage driver_history filtered by date/driver
-  function loadHistoryData(){
-    var arr = [];
-    try{
-      var stored = localStorage.getItem('driver_history');
-      if(stored){ arr = JSON.parse(stored) || []; }
-    }catch(e){}
-    try{
-      if((!arr || !arr.length) && window.sample && Array.isArray(window.sample)){
-        arr = window.sample.slice();
-      }
-    }catch(e){}
-    return Array.isArray(arr) ? arr : [];
-  }
-
-  function getCurrentDriverId(){
-    var el = qs('#lblEmpId') || qs('#drvId') || qs('#lblDriver');
-    return (el ? text(el) : 'DEMO').trim();
-  }
-
-  function filterRowsByDateAndDriver(allRows, dateISO, driverId){
-    return allRows.filter(function(r){
-      var recDate = r.date || r.Date || r.selectedDate || '';
-      var recDriver = r.driverId || r.empId || r.employeeId || '';
-      return (recDate === dateISO) && (!driverId || recDriver === driverId);
-    });
-  }
-
-  function mapRowsForTable(rows){
-    return rows.map(function(r){
-      var job = r.job || r.id || r.jobId || '';
-      var from = r.from || r.origin || '';
-      var to = r.to || r.loadin || r.destination || '';
-      var ctr = r.container || r.containerNo || r.containerId || '';
-      var le  = r.loadEmpty || r.load_status || r.status || '';
-      return [job, from, to, ctr, le];
-    });
-  }
-
-  function buildAndSavePdf(opts){
-    var emp = opts.employee;
-    var dateISO = opts.dateISO;
-    var rows = opts.rows;
-
-    var jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : window.jsPDF;
-    var doc = new jsPDF({orientation:'landscape', unit:'pt', format:'letter'});
-
-    var leftX = 40, topY = 40;
-    doc.setFont('helvetica','bold'); doc.setFontSize(14);
-    doc.text('Driver Daily History', leftX, topY);
-
-    doc.setFont('helvetica','normal'); doc.setFontSize(11);
-    doc.text('Employee Name: ' + (emp.name || ''), leftX, topY + 20);
-    doc.text('Employee ID: '   + (emp.id || ''),   leftX, topY + 38);
-
-    doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    doc.text('Date: ' + dateISO, 720, topY, {align:'right'});
-
-    var head = [['Job #','From','To','Container #','Load/Empty']];
-    var body = rows.length ? rows : [['','','','','']];
-
-    if (doc.autoTable) {
-      doc.autoTable({
-        startY: topY + 60,
-        head: head,
-        body: body,
-        styles: { font:'helvetica', fontSize: 10, cellPadding: 6, lineWidth: 0.5 },
-        headStyles: { fillColor: [20, 63, 163], textColor: 255, halign:'left' },
-        theme: 'grid',
-        margin: {left: 40, right: 40},
-        // Make 'Container #' and 'Load/Empty' narrower, leave others auto
-        columnStyles: {
-          3: { cellWidth: 110, halign:'left' },
-          4: { cellWidth: 100, halign:'left' }
-        }
-      });
-    } else {
-      var y = topY + 70;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text(head[0].join('    '), leftX, y);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      y += 18;
-      rows.forEach(function(row){
-        doc.text((row.join('    ')||''), leftX, y);
-        y += 16;
-      });
-    }
-
-    var fname = 'Driver_History_' + dateISO + '.pdf';
-    doc.save(fname);
-  }
-
-  function handleExport(){
-    var dateISO = getSelectedDate();
-    var emp = getEmployeeInfo();
-
-    // Prefer rows the user currently sees in the UI
-    var uiRows = collectRowsFromUI();
-
-    var finalRows = uiRows;
-    if (!finalRows.length) {
-      // fallback to stored/sample data filtered by date + driver
-      var all = loadHistoryData();
-      var filtered = filterRowsByDateAndDriver(all, dateISO, getCurrentDriverId());
-      finalRows = mapRowsForTable(filtered);
-    }
-
-    buildAndSavePdf({employee:emp, dateISO:dateISO, rows:finalRows});
-  }
-
-  document.addEventListener('click', function(ev){
-    var t = ev.target;
-    if (!t) return;
-    if (t.id === 'drvHistExport') {
-      ev.preventDefault();
-      try { handleExport(); } catch(e){ console.error('Export error:', e); }
-    }
-  }, true);
-})();
-</script>
-
-
-<!-- jsPDF + AutoTable (for landscape PDF with a clean table) -->
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<script>
-// === Driver History: Export PDF (Landscape; UI rows first; From/To equal widths; Job # smaller) ===
-(function(){
-  function qs(sel, root){ return (root||document).querySelector(sel); }
-  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
-  function text(el){ return (el && (el.textContent || el.value) || '').trim(); }
-
-  function getSelectedDate(){
-    var el = qs('#drvHistModal [data-selected-date]');
-    if (el && text(el)) return text(el);
-    var active = qs('#drvHistModal .tpl-days .is-selected') || qs('#drvHistModal .tpl-days .is-today');
-    var monthLabel = text(qs('#drvHistModal .tpl-month'));
-    var day = active ? text(active) : '';
-    if(!monthLabel || !day) return new Date().toISOString().slice(0,10);
-    try {
-      var dt = new Date(monthLabel + ' ' + day + ' 00:00:00');
-      if(!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
-    } catch(e){}
-    return new Date().toISOString().slice(0,10);
-  }
-
-  function getEmployeeInfo(){
-    return {
-      name: text(qs('#lblEmpName')) || 'Employee',
-      id: text(qs('#lblEmpId')) || 'ID'
-    };
-  }
-
-  // PRIMARY: collect the rows the user currently sees in the Driver History UI
-  function collectRowsFromUI(){
-    var scope = qs('#drvHistModal') || document;
-    var rows = [];
-    var table = qs('table, .job-table, #drvHistTable', scope);
-    if (table) {
-      var trList = qsa('tbody tr', table);
-      if (!trList.length) trList = qsa('tr', table).filter(function(tr){ return !qsa('th', tr).length; });
-      trList.forEach(function(tr){
-        var cells = qsa('td, .cell', tr).map(function(td){ return text(td); });
-        if (cells.length >= 5) rows.push([cells[0], cells[1], cells[2], cells[3], cells[4]]);
-      });
-    }
-    if (!rows.length) {
-      qsa('.job-row, [data-job-row]', scope).forEach(function(row){
-        var job = text(qs('[data-field="job"], .job-id, .job-num', row));
-        var from = text(qs('[data-field="from"], .from', row));
-        var to   = text(qs('[data-field="to"], .to', row));
-        var ctr  = text(qs('[data-field="container"], .container', row));
-        var le   = text(qs('[data-field="loadEmpty"], .load-empty, .loadEmpty', row));
-        if (job || from || to || ctr || le) rows.push([job, from, to, ctr, le]);
-      });
-    }
-    return rows;
-  }
-
-  // SECONDARY: look for a global examples map keyed by YYYY-MM-DD
-  function collectRowsFromExamplesByDate(dateISO){
-    try {
-      if (window.sampleByDate && window.sampleByDate[dateISO]) {
-        var arr = window.sampleByDate[dateISO] || [];
-        return arr.map(function(r){
-          return [r.job||r.id||r.jobId||'', r.from||r.origin||'', r.to||r.destination||r.loadin||'', r.container||r.containerNo||'', r.loadEmpty||r.status||''];
-        });
-      }
-    } catch(e){}
-    return [];
-  }
-
-  // TERTIARY: localStorage/sample arrays filtered by date and driver
-  function loadHistoryData(){
-    var arr = [];
-    try{ var stored = localStorage.getItem('driver_history'); if (stored) arr = JSON.parse(stored)||[]; }catch(e){}
-    try{ if((!arr||!arr.length) && window.sample && Array.isArray(window.sample)) arr = window.sample.slice(); }catch(e){}
-    return Array.isArray(arr) ? arr : [];
-  }
-  function getCurrentDriverId(){
-    var el = qs('#lblEmpId') || qs('#drvId') || qs('#lblDriver');
-    return (el ? text(el) : 'DEMO').trim();
-  }
-  function filterRowsByDateAndDriver(allRows, dateISO, driverId){
-    return allRows.filter(function(r){
-      var recDate = r.date || r.Date || r.selectedDate || '';
-      var recDriver = r.driverId || r.empId || r.employeeId || '';
-      return (recDate === dateISO) && (!driverId || recDriver === driverId);
-    });
-  }
-  function mapRowsForTable(rows){
-    return rows.map(function(r){
-      var job = r.job || r.id || r.jobId || '';
-      var from = r.from || r.origin || '';
-      var to = r.to || r.loadin || r.destination || '';
-      var ctr = r.container || r.containerNo || r.containerId || '';
-      var le  = r.loadEmpty || r.load_status || r.status || '';
-      return [job, from, to, ctr, le];
-    });
-  }
-
-  function buildAndSavePdf(opts){
-    var emp = opts.employee;
-    var dateISO = opts.dateISO;
-    var rows = opts.rows;
-
-    var jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : window.jsPDF;
-    var doc = new jsPDF({orientation:'landscape', unit:'pt', format:'letter'});
-
-    var leftX = 40, topY = 40;
-    doc.setFont('helvetica','bold'); doc.setFontSize(14);
-    doc.text('Driver Daily History', leftX, topY);
-
-    doc.setFont('helvetica','normal'); doc.setFontSize(11);
-    doc.text('Employee Name: ' + (emp.name || ''), leftX, topY + 20);
-    doc.text('Employee ID: '   + (emp.id || ''),   leftX, topY + 38);
-
-    doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    doc.text('Date: ' + dateISO, 720, topY, {align:'right'});
-
-    var head = [['Job #','From','To','Container #','Load/Empty']];
-    var body = rows.length ? rows : [['','','','','']];
-
-    if (doc.autoTable) {
-      doc.autoTable({
-        startY: topY + 60,
-        head: head,
-        body: body,
-        styles: { font:'helvetica', fontSize: 10, cellPadding: 6, lineWidth: 0.5 },
-        headStyles: { fillColor: [20, 63, 163], textColor: 255, halign:'left' },
-        theme: 'grid',
-        margin: {left: 40, right: 40},
-        // Column widths: Job # smaller; From & To same; Container # & Load/Empty smaller
-        columnStyles: {
-          0: { cellWidth: 90,  halign:'left' }, // Job #
-          1: { cellWidth: 190, halign:'left' }, // From
-          2: { cellWidth: 190, halign:'left' }, // To
-          3: { cellWidth: 110, halign:'left' }, // Container #
-          4: { cellWidth: 100, halign:'left' }  // Load/Empty
-        }
-      });
-    } else {
-      var y = topY + 70;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text(head[0].join('    '), leftX, y);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      y += 18;
-      rows.forEach(function(row){
-        doc.text((row.join('    ')||''), leftX, y);
-        y += 16;
-      });
-    }
-
-    doc.save('Driver_History_' + dateISO + '.pdf');
-  }
-
-  function handleExport(){
-    var dateISO = getSelectedDate();
-    var emp = getEmployeeInfo();
-
-    var uiRows = collectRowsFromUI();
-    var finalRows = uiRows;
-
-    if (!finalRows.length) {
-      // try global examples keyed by date
-      finalRows = collectRowsFromExamplesByDate(dateISO);
-    }
-    if (!finalRows.length) {
-      // fallback to stored/sample arrays filtered by date+driver
-      var all = loadHistoryData();
-      var filtered = filterRowsByDateAndDriver(all, dateISO, getCurrentDriverId());
-      finalRows = mapRowsForTable(filtered);
-    }
-
-    buildAndSavePdf({employee:emp, dateISO:dateISO, rows:finalRows});
-  }
-
-  document.addEventListener('click', function(ev){
-    var t = ev.target;
-    if (!t) return;
-    if (t.id === 'drvHistExport') {
-      ev.preventDefault();
-      try { handleExport(); } catch(e){ console.error('Export error:', e); }
-    }
-  }, true);
-})();
-</script>
-
-
-<!-- jsPDF + AutoTable (for landscape PDF with a clean table) -->
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<script>
-// === Driver History: Export PDF (Landscape; robust date->rows mapping) ===
-(function(){
-  function qs(sel, root){ return (root||document).querySelector(sel); }
-  function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
-  function text(el){ return (el && (el.textContent || el.value) || '').trim(); }
-  function isObj(x){ return x && typeof x === 'object'; }
-
-  // Build a variety of keys from an ISO date e.g. "2025-09-25"
-  function dateKeys(iso){
-    // iso expected "YYYY-MM-DD"
-    try {
-      var y = iso.slice(0,4), m = iso.slice(5,7), d = iso.slice(8,10);
-      var M = String(parseInt(m,10)); var D = String(parseInt(d,10));
-      return [
-        iso,                     // 2025-09-25
-        y + '/' + m + '/' + d,   // 2025/09/25
-        m + '/' + d + '/' + y,   // 09/25/2025
-        M + '/' + D + '/' + y,   // 9/25/2025
-        y + m + d,               // 20250925
-        d + '-' + m + '-' + y    // 25-09-2025
-      ];
-    } catch(e){ return [iso]; }
-  }
-
-  function getSelectedDate(){
-    var el = qs('#drvHistModal [data-selected-date]');
-    if (el && text(el)) return text(el);
-    var active = qs('#drvHistModal .tpl-days .is-selected') || qs('#drvHistModal .tpl-days .is-today');
-    var monthLabel = text(qs('#drvHistModal .tpl-month'));
-    var day = active ? text(active) : '';
-    if(!monthLabel || !day) return new Date().toISOString().slice(0,10);
-    try {
-      var dt = new Date(monthLabel + ' ' + day + ' 00:00:00');
-      if(!isNaN(dt.getTime())) return dt.toISOString().slice(0,10);
-    } catch(e){}
-    return new Date().toISOString().slice(0,10);
-  }
-
-  function getEmployeeInfo(){
-    return {
-      name: text(qs('#lblEmpName')) || 'Employee',
-      id: text(qs('#lblEmpId')) || 'ID'
-    };
-  }
-
-  // 1) Take what the user sees in the UI (highest fidelity)
-  function collectRowsFromUI(){
-    var scope = qs('#drvHistModal') || document;
-    var rows = [];
-    var table = qs('table, .job-table, #drvHistTable', scope);
-    if (table) {
-      var trList = qsa('tbody tr', table);
-      if (!trList.length) trList = qsa('tr', table).filter(function(tr){ return !qsa('th', tr).length; });
-      trList.forEach(function(tr){
-        var cells = qsa('td, .cell', tr).map(function(td){ return text(td); });
-        if (cells.length >= 5) rows.push([cells[0], cells[1], cells[2], cells[3], cells[4]]);
-      });
-    }
-    if (!rows.length) {
-      qsa('.job-row, [data-job-row]', scope).forEach(function(row){
-        var job = text(qs('[data-field="job"], .job-id, .job-num', row));
-        var from = text(qs('[data-field="from"], .from', row));
-        var to   = text(qs('[data-field="to"], .to', row));
-        var ctr  = text(qs('[data-field="container"], .container', row));
-        var le   = text(qs('[data-field="loadEmpty"], .load-empty, .loadEmpty', row));
-        if (job || from || to || ctr || le) rows.push([job, from, to, ctr, le]);
-      });
-    }
-    return rows;
-  }
-
-  // 2) Examples keyed by date: probe multiple common globals and formats
-  function collectFromExamples(dateISO){
-    var keys = dateKeys(dateISO);
-    var candidates = [
-      'sampleByDate','examplesByDate','jobsByDate','historyByDate','driverHistoryByDate',
-      'drvHistExamples','driverExamples','jobExamples','demoByDate','seedByDate'
-    ];
-    for (var i=0;i<candidates.length;i++){
-      var name = candidates[i];
-      var obj = window[name];
-      if (!isObj(obj)) continue;
-      for (var j=0;j<keys.length;j++){
-        var key = keys[j];
-        if (Array.isArray(obj[key]) && obj[key].length){
-          return obj[key].map(mapRec);
-        }
-      }
-    }
-    // hidden JSON blobs in DOM
-    var jsonEl = qs('#drvHistModal [data-jobs-json], [data-jobs-json]');
-    if (jsonEl && text(jsonEl)) {
-      try {
-        var parsed = JSON.parse(text(jsonEl));
-        for (var k=0;k<keys.length;k++){
-          var arr = parsed[keys[k]];
-          if (Array.isArray(arr) && arr.length) return arr.map(mapRec);
-        }
-      } catch(e){}
-    }
-    return [];
-  }
-
-  // 3) Storage-backed history (fallback)
-  function collectFromStorage(dateISO){
-    var all = [];
-    try{
-      var byDate = localStorage.getItem('driver_history_by_date');
-      if (byDate){
-        var m = JSON.parse(byDate);
-        var keys = dateKeys(dateISO);
-        for (var i=0;i<keys.length;i++){
-          var arr = m[keys[i]];
-          if (Array.isArray(arr) && arr.length){ all = arr; break; }
-        }
-      }
-      if (!all.length){
-        var flat = localStorage.getItem('driver_history');
-        if (flat){ all = JSON.parse(flat)||[]; }
-      }
-    }catch(e){}
-    if (!Array.isArray(all)) all = [];
-    // Optional: filter by date if flat
-    if (all.length && !Array.isArray(all[0])){
-      var filtered = all.filter(function(r){
-        var d = r.date || r.Date || r.selectedDate || '';
-        return !!d && (d === dateISO);
-      });
-      if (filtered.length) all = filtered;
-    }
-    return all.map(mapRec);
-  }
-
-  function mapRec(r){
-    // Normalize to [Job #, From, To, Container #, Load/Empty]
-    var job = (r && (r.job || r.id || r.jobId || r.num || r.code)) || '';
-    var from = (r && (r.from || r.origin || r.pickup || r.pickupName)) || '';
-    var to = (r && (r.to || r.destination || r.delivery || r.loadin || r.dropoff)) || '';
-    var ctr = (r && (r.container || r.containerNo || r.containerId || r.cntr || r.equipment)) || '';
-    var le  = (r && (r.loadEmpty || r.load_status || r.status || r.loadState || r.le)) || '';
-    return [job, from, to, ctr, le];
-  }
-
-  function buildAndSavePdf(opts){
-    var emp = opts.employee;
-    var dateISO = opts.dateISO;
-    var rows = (opts.rows || []).filter(function(r){
-      // Remove completely empty rows
-      return Array.isArray(r) && r.some(function(x){ return (x||'').toString().trim().length; });
-    });
-
-    var jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : window.jsPDF;
-    var doc = new jsPDF({orientation:'landscape', unit:'pt', format:'letter'});
-
-    var leftX = 40, topY = 40;
-    doc.setFont('helvetica','bold'); doc.setFontSize(14);
-    doc.text('Driver Daily History', leftX, topY);
-
-    doc.setFont('helvetica','normal'); doc.setFontSize(11);
-    doc.text('Employee Name: ' + (emp.name || ''), leftX, topY + 20);
-    doc.text('Employee ID: '   + (emp.id || ''),   leftX, topY + 38);
-
-    doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    doc.text('Date: ' + dateISO, 720, topY, {align:'right'});
-
-    var head = [['Job #','From','To','Container #','Load/Empty']];
-    var body = rows.length ? rows : [['','','','','']];
-
-    if (doc.autoTable) {
-      doc.autoTable({
-        startY: topY + 60,
-        head: head,
-        body: body,
-        styles: { font:'helvetica', fontSize: 10, cellPadding: 6, lineWidth: 0.5 },
-        headStyles: { fillColor: [20, 63, 163], textColor: 255, halign:'left' },
-        theme: 'grid',
-        margin: {left: 40, right: 40},
-        columnStyles: {
-          0: { cellWidth: 90,  halign:'left' },  // Job # (smaller)
-          1: { cellWidth: 190, halign:'left' },  // From (same width as To)
-          2: { cellWidth: 190, halign:'left' },  // To
-          3: { cellWidth: 110, halign:'left' },  // Container # (smaller)
-          4: { cellWidth: 100, halign:'left' }   // Load/Empty (smaller)
-        }
-      });
-    } else {
-      var y = topY + 70;
-      doc.setFont('helvetica','bold'); doc.setFontSize(11);
-      doc.text(head[0].join('    '), leftX, y);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      y += 18;
-      rows.forEach(function(row){
-        doc.text((row.join('    ')||''), leftX, y);
-        y += 16;
-      });
-    }
-
-    doc.save('Driver_History_' + dateISO + '.pdf');
-  }
-
-  function handleExport(){
-    var dateISO = getSelectedDate();
-    var emp = getEmployeeInfo();
-
-    // Priority: UI rows user is seeing for that date
-    var uiRows = collectRowsFromUI();
-
-    // If none, use the preset examples keyed by date (multiple globals/keys supported)
-    var exRows = [];
-    if (!uiRows.length) exRows = collectFromExamples(dateISO);
-
-    // If still none, use storage-backed data filtered by date
-    var stRows = [];
-    if (!uiRows.length && !exRows.length) stRows = collectFromStorage(dateISO);
-
-    var finalRows = uiRows.length ? uiRows : (exRows.length ? exRows : stRows);
-    buildAndSavePdf({employee:emp, dateISO:dateISO, rows:finalRows});
-  }
-
-  document.addEventListener('click', function(ev){
-    var t = ev.target;
-    if (!t) return;
-    if (t.id === 'drvHistExport') {
-      ev.preventDefault();
-      try { handleExport(); } catch(e){ console.error('Export error:', e); }
-    }
-  }, true);
-})();
-</script>
-
-</body></html>
+</body>
+</html>
